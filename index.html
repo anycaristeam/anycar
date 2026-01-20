@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Isteam Anycar Reservation</title>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
@@ -17,6 +18,7 @@
         button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.3s; }
         button:hover { background: #2980b9; }
         .notice { background: #fff3cd; color: #856404; padding: 12px; border-radius: 6px; font-size: 0.85em; margin-bottom: 20px; border: 1px solid #ffeeba; }
+        /* 구글 지도 버튼 스타일 */
         .map-btn { display: inline-block; width: 100%; padding: 12px; background: #34a853; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; text-align: center; margin-top: 20px; box-sizing: border-box; }
         .map-btn:hover { background: #2d8e47; }
     </style>
@@ -32,110 +34,4 @@
         <div class="section">
             <label>Customer Info</label>
             <input type="text" id="custName" placeholder="Full Name" required style="margin-bottom:10px;">
-            <input type="tel" id="custPhone" placeholder="Phone (ex: 123-456-7890)" required style="margin-bottom:10px;">
-            <input type="email" id="custEmail" placeholder="Email Address" required>
-        </div>
-
-        <div class="section">
-            <label>Vehicle & Service</label>
-            <select id="vehicleType" required style="margin-bottom:10px;">
-                <option value="Sedan">Sedan</option>
-                <option value="SUV 5seats">SUV (5 Seats)</option>
-                <option value="Van/SUV 7seats">Van / SUV (7 Seats)</option>
-            </select>
-            <select id="serviceType" onchange="fetchBookedTimes()" required>
-                <option value="30">Basic (30 min)</option>
-                <option value="120" selected>Premium Full Steam (2 hrs)</option>
-            </select>
-        </div>
-
-        <div class="section">
-            <label>Select Booking Date (MM/DD/YYYY)</label>
-            <input type="date" id="bookingDate" onchange="fetchBookedTimes()" required>
-            <label style="margin-top:15px;">Available Time</label>
-            <select id="bookingTime" required disabled>
-                <option value="">Please select a date first</option>
-            </select>
-        </div>
-
-        <button type="submit" id="submitBtn">Complete Booking</button>
-    </form>
-
-    <a href="https://maps.app.goo.gl/hGzN2zL43Fp3vFvU8" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
-</div>
-
-<script>
-    // [중요] 사장님의 최신 Apps Script Web App URL을 아래 따옴표 안에 꼭 넣으세요!
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzzN48FZbTvHpL6YTkaR2NsYL9dIM2FDpSmZbVNXu8fjm-uw8fTBpTtzHUS3u17XCXz/exec';
-
-    async function fetchBookedTimes() {
-        const date = document.getElementById('bookingDate').value;
-        const timeSelect = document.getElementById('bookingTime');
-        if (!date) return;
-        timeSelect.disabled = true;
-        timeSelect.innerHTML = '<option value="">Checking...</option>';
-        try {
-            const response = await fetch(`${scriptURL}?date=${date}`);
-            const bookedTimes = await response.json(); 
-            generateTimeSlots(date, bookedTimes);
-        } catch (e) { alert('Failed to load data.'); }
-    }
-
-    function generateTimeSlots(dateInput, bookedTimes) {
-        const duration = parseInt(document.getElementById('serviceType').value);
-        const timeSelect = document.getElementById('bookingTime');
-        const day = new Date(dateInput + "T00:00:00").getDay();
-        timeSelect.innerHTML = '';
-        let open = 10, close = ([1,2,4,5].includes(day)) ? 16 : (day === 6 ? 12 : 0);
-        if (close === 0) { timeSelect.add(new Option("Closed", "")); return; }
-
-        const bookedMinutes = bookedTimes.map(t => {
-            let str = t.toString().toUpperCase();
-            let match = str.match(/(\d+):(\d+)/); 
-            if (!match) return null;
-            let h = parseInt(match[1]);
-            let m = parseInt(match[2]);
-            if (str.includes("PM") && h < 12) h += 12;
-            if (str.includes("AM") && h === 12) h = 0;
-            return h * 60 + m;
-        });
-
-        let curr = new Date(dateInput + `T${open}:00:00`);
-        const end = new Date(dateInput + `T${close}:00:00`);
-        while (curr < end) {
-            let next = new Date(curr.getTime() + duration * 60000);
-            let currentTotalMin = curr.getHours() * 60 + curr.getMinutes();
-            let displayTime = `${curr.getHours() % 12 || 12}:${curr.getMinutes().toString().padStart(2, '0')} ${curr.getHours() >= 12 ? 'PM' : 'AM'}`;
-            const isLunch = (day !== 6) && (curr.getHours() === 12 || (next > new Date(dateInput + "T12:00:00") && curr < new Date(dateInput + "T13:00:00")));
-            if (!isLunch && next <= end && !bookedMinutes.includes(currentTotalMin)) {
-                timeSelect.add(new Option(displayTime, displayTime));
-            }
-            curr.setMinutes(curr.getMinutes() + 30);
-        }
-        timeSelect.disabled = false;
-    }
-
-    document.getElementById('bookingForm').onsubmit = async function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('submitBtn');
-        btn.disabled = true;
-        const data = {
-            name: document.getElementById('custName').value,
-            phone: document.getElementById('custPhone').value,
-            email: document.getElementById('custEmail').value,
-            vehicle: document.getElementById('vehicleType').value,
-            service: document.getElementById('serviceType').options[document.getElementById('serviceType').selectedIndex].text,
-            date: document.getElementById('bookingDate').value,
-            time: document.getElementById('bookingTime').value
-        };
-        try {
-            await fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) });
-            await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
-            alert('Reservation Successful!');
-            location.reload();
-        } catch (err) { alert('Reservation saved! Check your calendar.'); location.reload(); }
-    };
-</script>
-</body>
-</html>
-
+            <input type="tel" id="custPhone" placeholder="Phone (ex: 12
