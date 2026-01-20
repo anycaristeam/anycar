@@ -17,6 +17,8 @@
         button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.3s; }
         button:hover { background: #2980b9; }
         .notice { background: #fff3cd; color: #856404; padding: 12px; border-radius: 6px; font-size: 0.85em; margin-bottom: 20px; border: 1px solid #ffeeba; }
+        .map-btn { display: inline-block; width: 100%; padding: 12px; background: #34a853; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; text-align: center; margin-top: 20px; box-sizing: border-box; }
+        .map-btn:hover { background: #2d8e47; }
     </style>
 </head>
 <body>
@@ -37,7 +39,8 @@
         <div class="section">
             <label>Vehicle & Service</label>
             <select id="vehicleType" required style="margin-bottom:10px;">
-                <option value="Sedan">Sedan</option> <option value="SUV 5seats">SUV (5 Seats)</option>
+                <option value="Sedan">Sedan</option>
+                <option value="SUV 5seats">SUV (5 Seats)</option>
                 <option value="Van/SUV 7seats">Van / SUV (7 Seats)</option>
             </select>
             <select id="serviceType" onchange="fetchBookedTimes()" required>
@@ -57,9 +60,12 @@
 
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
+
+    <a href="https://maps.app.goo.gl/hGzN2zL43Fp3vFvU8" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
 </div>
 
 <script>
+    // [중요] 사장님의 최신 Apps Script Web App URL을 아래 따옴표 안에 꼭 넣으세요!
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxoFPWO1MluwohEdeG5pcYM6pCBbKCG0YaYhwMmGvQih3wALnhy60o7VNdV7OS2vZJP/exec';
 
     async function fetchBookedTimes() {
@@ -127,7 +133,7 @@
             await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
             alert('Reservation Successful!');
             location.reload();
-        } catch (err) { alert('Successfully saved!'); location.reload(); }
+        } catch (err) { alert('Reservation saved! Check your calendar.'); location.reload(); }
     };
 </script>
 </body>
