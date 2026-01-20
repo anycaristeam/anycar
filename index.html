@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Isteam Anycar Reservation</title>
@@ -9,30 +9,35 @@
     </script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; color: #333; }
-        .container { max-width: 600px; background: white; margin: 0 auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .container { max-width: 600px; background: white; margin: 0 auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; text-align: center; }
         .section { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #444; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; transition: background 0.3s; }
+        button:hover { background: #2980b9; }
         .notice { background: #fff3cd; color: #856404; padding: 12px; border-radius: 6px; font-size: 0.85em; margin-bottom: 20px; border: 1px solid #ffeeba; }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>Isteam Anycar Reservation</h2>
-    <div class="notice">점심시간(12:00-1:00 PM) 및 수, 일요일은 예약 불가합니다.</div>
+    <h2>Isteam Anycar Booking</h2>
+    <div class="notice">
+        • Lunch Time (12:00-1:00 PM) & Wed, Sun: Closed<br>
+        • We will contact you at the number provided to confirm.
+    </div>
     <form id="bookingForm">
         <div class="section">
             <label>Customer Info</label>
             <input type="text" id="custName" placeholder="Full Name" required style="margin-bottom:10px;">
-            <input type="tel" id="custPhone" placeholder="Phone Number" required style="margin-bottom:10px;">
+            <input type="tel" id="custPhone" placeholder="Phone (ex: 123-456-7890)" required style="margin-bottom:10px;">
             <input type="email" id="custEmail" placeholder="Email Address" required>
         </div>
+
         <div class="section">
             <label>Vehicle & Service</label>
             <select id="vehicleType" required style="margin-bottom:10px;">
-                <option value="Sedan">Sedan (승용차)</option>
+                <option value="Sedan">Sedan</option>
                 <option value="SUV 5seats">SUV (5 Seats)</option>
                 <option value="Van/SUV 7seats">Van / SUV (7 Seats)</option>
             </select>
@@ -41,20 +46,21 @@
                 <option value="120" selected>Premium Full Steam (2 hrs)</option>
             </select>
         </div>
+
         <div class="section">
-            <label>Booking Date</label>
+            <label>Select Date (MM/DD/YYYY)</label>
             <input type="date" id="bookingDate" onchange="fetchBookedTimes()" required>
             <label style="margin-top:15px;">Available Time</label>
             <select id="bookingTime" required disabled>
-                <option value="">날짜를 먼저 선택해 주세요</option>
+                <option value="">Please select a date first</option>
             </select>
         </div>
+
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
 </div>
 
 <script>
-    // 사장님의 새로운 구글 앱스 스크립트 주소로 업데이트 완료!
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxoFPWO1MluwohEdeG5pcYM6pCBbKCG0YaYhwMmGvQih3wALnhy60o7VNdV7OS2vZJP/exec';
 
     async function fetchBookedTimes() {
@@ -62,12 +68,12 @@
         const timeSelect = document.getElementById('bookingTime');
         if (!date) return;
         timeSelect.disabled = true;
-        timeSelect.innerHTML = '<option value="">확인 중...</option>';
+        timeSelect.innerHTML = '<option value="">Checking...</option>';
         try {
             const response = await fetch(`${scriptURL}?date=${date}`);
             const bookedTimes = await response.json(); 
             generateTimeSlots(date, bookedTimes);
-        } catch (e) { alert('데이터 로드 실패'); }
+        } catch (e) { alert('Failed to load data.'); }
     }
 
     function generateTimeSlots(dateInput, bookedTimes) {
@@ -76,7 +82,7 @@
         const day = new Date(dateInput + "T00:00:00").getDay();
         timeSelect.innerHTML = '';
         let open = 10, close = ([1,2,4,5].includes(day)) ? 16 : (day === 6 ? 12 : 0);
-        if (close === 0) { timeSelect.add(new Option("영업 휴무일입니다", "")); return; }
+        if (close === 0) { timeSelect.add(new Option("Closed", "")); return; }
 
         const bookedMinutes = bookedTimes.map(t => {
             let str = t.toString().toUpperCase();
@@ -122,7 +128,7 @@
             await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
             alert('Reservation Successful!');
             location.reload();
-        } catch (err) { alert('Saved!'); location.reload(); }
+        } catch (err) { alert('Successfully saved!'); location.reload(); }
     };
 </script>
 </body>
