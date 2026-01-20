@@ -54,10 +54,10 @@
         </div>
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
-    <a href="https://maps.app.goo.gl/hGzN2zL43Fp3vFvU8" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
+    <a href="https://maps.google.com/?cid=15503650007995902039&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQ" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
 </div>
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwt5UdlJ38m7Chrp8hsqxVIBOKqTPaarfGGOtBDjqxKvOsfOIqPfhJXKZrjEgHAc7e3/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxYXI9WRERqLsxkRyv27aACm95xRxJZ31MLvVrdiz6OhS1N0jigNIlPxneFwF0MOwOt/exec';
     async function fetchBookedTimes() {
         const date = document.getElementById('bookingDate').value;
         const timeSelect = document.getElementById('bookingTime');
@@ -75,7 +75,7 @@
         const timeSelect = document.getElementById('bookingTime');
         const day = new Date(dateInput + "T00:00:00").getDay();
         timeSelect.innerHTML = '';
-        let open = 10, close = ([1,2,4,5].includes(day)) ? 16 : (day === 6 ? 12 : 0);
+        let open = 10, close = ([1,2,4,5].includes(day)) ? 18 : (day === 6 ? 12 : 0);
         if (close === 0) { timeSelect.add(new Option("Closed", "")); return; }
         const bookedMinutes = bookedTimes.map(t => {
             let str = t.toString().toUpperCase();
