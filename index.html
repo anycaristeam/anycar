@@ -37,8 +37,7 @@
         <div class="section">
             <label>Vehicle & Service</label>
             <select id="vehicleType" required style="margin-bottom:10px;">
-                <option value="Sedan">Sedan</option>
-                <option value="SUV 5seats">SUV (5 Seats)</option>
+                <option value="Sedan">Sedan</option> <option value="SUV 5seats">SUV (5 Seats)</option>
                 <option value="Van/SUV 7seats">Van / SUV (7 Seats)</option>
             </select>
             <select id="serviceType" onchange="fetchBookedTimes()" required>
@@ -48,7 +47,7 @@
         </div>
 
         <div class="section">
-            <label>Select Date (MM/DD/YYYY)</label>
+            <label>Select Booking Date (MM/DD/YYYY)</label>
             <input type="date" id="bookingDate" onchange="fetchBookedTimes()" required>
             <label style="margin-top:15px;">Available Time</label>
             <select id="bookingTime" required disabled>
