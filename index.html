@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Isteam Anycar Booking</title>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script type="text/javascript">
-       (function(){ emailjs.init("BIDmuBZ6ZVPn--iE8"); })();
-    </script>
+    <script type="text/javascript"> (function(){ emailjs.init("BIDmuBZ6ZVPn--iE8"); })(); </script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 10px; color: #333; margin: 0; }
         .container { max-width: 500px; background: white; margin: 20px auto; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); box-sizing: border-box; }
@@ -58,10 +56,8 @@
     </form>
     <a href="https://maps.app.goo.gl/hGzN2zL43Fp3vFvU8" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
 </div>
-
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzIYPL5hENPuDDoLM1KEDpwGxZ7njiPdP__8Ln5cLl19a9oDl1HogTgyUBt0iQwcK_J/exec';
-
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwt5UdlJ38m7Chrp8hsqxVIBOKqTPaarfGGOtBDjqxKvOsfOIqPfhJXKZrjEgHAc7e3/exec';
     async function fetchBookedTimes() {
         const date = document.getElementById('bookingDate').value;
         const timeSelect = document.getElementById('bookingTime');
@@ -74,7 +70,6 @@
             generateTimeSlots(date, bookedTimes);
         } catch (e) { alert('Failed to load data.'); }
     }
-
     function generateTimeSlots(dateInput, bookedTimes) {
         const duration = parseInt(document.getElementById('serviceType').value);
         const timeSelect = document.getElementById('bookingTime');
@@ -104,7 +99,6 @@
         }
         timeSelect.disabled = false;
     }
-
     document.getElementById('bookingForm').onsubmit = async function(e) {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
