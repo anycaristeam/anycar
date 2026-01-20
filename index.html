@@ -54,10 +54,12 @@
         </div>
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
-    <a href="https://maps.google.com/?cid=15503650007995902039&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQ" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
+    <a href="https://maps.app.goo.gl/9T5Zc8fK2k8xP9H79" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
 </div>
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxYXI9WRERqLsxkRyv27aACm95xRxJZ31MLvVrdiz6OhS1N0jigNIlPxneFwF0MOwOt/exec';
+    // 이 부분에 사장님이 새로 배포하신 Apps Script 주소를 넣어주세요!
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwbJauGAA8AvpBsbQAlOPkloGGv-aMYSu1IzNgK51LpQ2XI0qrzc5Hw8jmqkWpissJW/exec';
+
     async function fetchBookedTimes() {
         const date = document.getElementById('bookingDate').value;
         const timeSelect = document.getElementById('bookingTime');
@@ -115,7 +117,7 @@
         try {
             await fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) });
             await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
-            alert('Reservation Successful! Check your calendar.');
+            alert('Reservation Successful!');
             location.reload();
         } catch (err) { alert('Successfully saved!'); location.reload(); }
     };
