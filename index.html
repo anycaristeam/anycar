@@ -15,7 +15,7 @@
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
         .notice { background: #fff3cd; color: #856404; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; border: 1px solid #ffeeba; line-height: 1.5; }
         button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .map-btn { display: block; width: 100%; padding: 12px; background: #34a853; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; text-align: center; margin-top: 10px; box-sizing: border-box; }
+        .map-btn { display: block; width: 100%; padding: 15px; background: #34a853; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; text-align: center; margin-top: 15px; box-sizing: border-box; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -45,7 +45,7 @@
             </select>
         </div>
         <div class="section">
-            <label>Select Booking Date (MM/DD/YYYY)</label>
+            <label>Select Booking Date</label>
             <input type="date" id="bookingDate" onchange="fetchBookedTimes()" required>
             <label style="margin-top:10px;">Available Time</label>
             <select id="bookingTime" required disabled>
@@ -54,11 +54,13 @@
         </div>
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
-    <a href="https://maps.app.goo.gl/9T5Zc8fK2k8xP9H79" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
+
+    <a href="https://maps.app.goo.gl/uXv4Vp8x3734v3vH6" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
 </div>
+
 <script>
-    // 이 부분에 사장님이 새로 배포하신 Apps Script 주소를 넣어주세요!
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxASIujU112rPwe4EYZzbxtYWckF6_z8btag7TJPyB81rvPSlZ9I0NkFxy7YCa_R4sn/exec';
+    // [중요] 사장님이 새로 배포하신 Apps Script 주소를 아래 ' ' 사이에 꼭 넣어주세요!
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwFzptLilFnlBEMQoceGdEZLGpM9Mz-myjPJ0clNbhQwADTQ06lgMqGMn0sGUE5ZydJ/exec';
 
     async function fetchBookedTimes() {
         const date = document.getElementById('bookingDate').value;
@@ -72,6 +74,7 @@
             generateTimeSlots(date, bookedTimes);
         } catch (e) { alert('Failed to load data.'); }
     }
+
     function generateTimeSlots(dateInput, bookedTimes) {
         const duration = parseInt(document.getElementById('serviceType').value);
         const timeSelect = document.getElementById('bookingTime');
@@ -79,6 +82,7 @@
         timeSelect.innerHTML = '';
         let open = 10, close = ([1,2,4,5].includes(day)) ? 18 : (day === 6 ? 12 : 0);
         if (close === 0) { timeSelect.add(new Option("Closed", "")); return; }
+        
         const bookedMinutes = bookedTimes.map(t => {
             let str = t.toString().toUpperCase();
             let match = str.match(/(\d+):(\d+)/); 
@@ -88,6 +92,7 @@
             if (str.includes("AM") && h === 12) h = 0;
             return h * 60 + m;
         });
+
         let curr = new Date(dateInput + `T${open}:00:00`), end = new Date(dateInput + `T${close}:00:00`);
         while (curr < end) {
             let next = new Date(curr.getTime() + duration * 60000);
@@ -101,6 +106,7 @@
         }
         timeSelect.disabled = false;
     }
+
     document.getElementById('bookingForm').onsubmit = async function(e) {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
@@ -117,11 +123,10 @@
         try {
             await fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) });
             await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
-            alert('Reservation Successful!');
+            alert('Reservation Successful! Check your calendar.');
             location.reload();
         } catch (err) { alert('Successfully saved!'); location.reload(); }
     };
 </script>
 </body>
 </html>
-
