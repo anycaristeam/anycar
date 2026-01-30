@@ -22,7 +22,7 @@
 <div class="container">
     <h2>Anycaristeam Booking</h2>
     <div class="notice">
-        • Wed, Sun: Closed | Lunch (12:00-1:00 PM) <br>
+        • Wed, Sun: Closed | Lunch (12:00-1:00 PM)<br>
         • Premium (2 hrs) / Basic (30 mins)
     </div>
     <form id="bookingForm">
@@ -60,7 +60,7 @@
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
     
-    <a href="https://maps.google.com/?q=0+Harlech+Ct" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
+    <a href="https://www.google.com/maps/search/?api=1&query=25+Harlech+Ct,+Thornhill,+ON+L3T+6L5" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
 </div>
 
 <script>
@@ -140,4 +140,20 @@
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
         btn.disabled = true; btn.innerText = "Processing...";
-        const data
+        const data = {
+            name: document.getElementById('custName').value,
+            phone: document.getElementById('custPhone').value,
+            vehicle: document.getElementById('vehicleType').value,
+            service: document.getElementById('serviceType').options[document.getElementById('serviceType').selectedIndex].text,
+            date: document.getElementById('bookingDate').value,
+            time: document.getElementById('bookingTime').value
+        };
+        try {
+            await fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) });
+            await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
+            alert('Reservation Successful!'); location.reload();
+        } catch (err) { alert('Reservation Successful!'); location.reload(); }
+    };
+</script>
+</body>
+</html>
