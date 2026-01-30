@@ -40,8 +40,8 @@
                 <option value="Van/SUV 7seats">Van / SUV (7 Seats)</option>
             </select>
             <select id="serviceType" onchange="fetchBookedTimes()" required>
-                <option value="120" selected>Premium Full Steam (2 hrs)</option>
-                <option value="30">Basic (30 mins)</option>
+                <option value="Premium Full Steam (2 hrs)" selected>Premium Full Steam (2 hrs)</option>
+                <option value="Basic (30 mins)">Basic (30 mins)</option>
             </select>
         </div>
         <div class="section">
@@ -54,10 +54,11 @@
         </div>
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
-    <a href="https://www.google.com/maps/search/?api=1&query=25+Harlech+Ct+Markham+ON" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
+    <a href="https://maps.app.goo.gl/vS1E1R6e4j2e7W5v8" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
 </div>
 
 <script>
+    // ⚠️ 사장님 성공하셨던 당시의 URL로 완전 고정
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyxe_UwFcJ3h_QDr--_drsKPV5yzAiwcBuMB1OymNWm7_P8lZYUj_AqoK234fys8gpR/exec';
 
     async function fetchBookedTimes() {
@@ -135,7 +136,7 @@
             phone: document.getElementById('custPhone').value,
             email: document.getElementById('custEmail').value,
             vehicle: document.getElementById('vehicleType').value,
-            service: document.getElementById('serviceType').options[document.getElementById('serviceType').selectedIndex].text,
+            service: document.getElementById('serviceType').value,
             date: document.getElementById('bookingDate').value,
             time: timeVal
         };
