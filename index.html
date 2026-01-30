@@ -37,26 +37,28 @@
         </select>
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
+    
+    <a href="https://maps.google.com/?q=Anycaristeam" target="_blank" class="map-btn">📍 View Our Location</a>
 </div>
 
 <script>
-    // ⚠️ 사장님의 구글 앱스 스크립트 URL을 여기에 정확히 넣어주세요!
+    // 사장님의 구글 앱스 스크립트 URL
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyxe_UwFcJ3h_QDr--_drsKPV5yzAiwcBuMB1OymNWm7_P8lZYUj_AqoK234fys8gpR/exec';
 
     async function fetchBookedTimes() {
-        const date = document.getElementById('bookingDate').value;
+        const dateInput = document.getElementById('bookingDate').value;
         const timeSelect = document.getElementById('bookingTime');
-        if (!date) return;
+        if (!dateInput) return;
 
         timeSelect.disabled = true;
         timeSelect.innerHTML = '<option value="">Checking availability...</option>';
 
         try {
-            const response = await fetch(`${scriptURL}?date=${date}`);
+            const response = await fetch(`${scriptURL}?date=${dateInput}`);
             const bookedTimes = await response.json(); 
-            generateTimeSlots(date, bookedTimes);
+            generateTimeSlots(dateInput, bookedTimes);
         } catch (e) {
-            generateTimeSlots(date, []); 
+            generateTimeSlots(dateInput, []); 
         }
     }
 
@@ -70,7 +72,7 @@
             return;
         }
 
-        // 시트 예약 데이터 표준화 (공백 제거)
+        // 시트 예약 데이터 표준화
         const normalizedBooked = bookedTimes.map(t => t.toString().replace(/\s+/g, '').toUpperCase());
 
         for (let h = 10; h < (day === 6 ? 12 : 18); h++) {
@@ -84,7 +86,6 @@
 
                 let opt = new Option(displayTime, displayTime);
                 
-                // 만약 시트에 이 시간이 있으면 빨간색으로 막기!
                 if (normalizedBooked.includes(compareTime)) {
                     opt.disabled = true;
                     opt.text += " (Full)";
@@ -107,4 +108,8 @@
         btn.innerText = "Processing...";
         const data = {
             name: document.getElementById('custName').value,
-            phone: document.getElementById('custPhone
+            phone: document.getElementById('custPhone').value,
+            date: document.getElementById('bookingDate').value,
+            time: document.getElementById('bookingTime').value,
+            service: document.getElementById('serviceType').options[document.getElementById('serviceType').selectedIndex].text,
+            email: "anycaristeam
