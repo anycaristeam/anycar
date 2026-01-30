@@ -9,111 +9,158 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 10px; color: #333; margin: 0; }
         .container { max-width: 500px; background: white; margin: 20px auto; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); box-sizing: border-box; }
-        h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; text-align: center; }
-        .notice { background: #fff3cd; color: #856404; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; border: 1px solid #ffeeba; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 15px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; text-align: center; font-size: 22px; }
+        .section { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #444; font-size: 14px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        .notice { background: #fff3cd; color: #856404; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; border: 1px solid #ffeeba; line-height: 1.5; }
+        button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .map-btn { display: block; width: 100%; padding: 15px; background: #34a853; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; text-align: center; margin-top: 15px; box-sizing: border-box; font-size: 16px; }
     </style>
 </head>
 <body>
 <div class="container">
     <h2>Anycaristeam Booking</h2>
-    <div class="notice">• Lunch Time (12-1 PM) & Wed, Sun: Closed</div>
+    <div class="notice">
+        • Lunch Time (12:00-1:00 PM) & Wed, Sun: Closed<br>
+        • We will contact you at the number provided to confirm.
+    </div>
     <form id="bookingForm">
-        <label>Name</label><input type="text" id="custName" required>
-        <label>Phone</label><input type="tel" id="custPhone" required>
-        <label>Service</label>
-        <select id="serviceType"><option value="120">Premium Full Steam (2 hrs)</option><option value="30">Basic (30 mins)</option></select>
-        <label>Date</label><input type="date" id="bookingDate" onchange="fetchBookedTimes()" required>
-        <label>Time</label>
-        <select id="bookingTime" required disabled><option value="">Select date first</option></select>
+        <div class="section">
+            <label>Customer Info</label>
+            <input type="text" id="custName" placeholder="Full Name" required style="margin-bottom:8px;">
+            <input type="tel" id="custPhone" placeholder="Phone (ex: 123-456-7890)" required style="margin-bottom:8px;">
+            <input type="email" id="custEmail" placeholder="Email Address" required>
+        </div>
+        <div class="section">
+            <label>Vehicle & Service</label>
+            <select id="vehicleType" required style="margin-bottom:8px;">
+                <option value="Sedan">Sedan</option>
+                <option value="SUV 5seats">SUV (5 Seats)</option>
+                <option value="Van/SUV 7seats">Van / SUV (7 Seats)</option>
+            </select>
+            <select id="serviceType" onchange="fetchBookedData()" required>
+                <option value="120" selected>Premium Full Steam (2 hrs)</option>
+                <option value="30">Basic (30 mins)</option>
+            </select>
+        </div>
+        <div class="section">
+            <label>Select Booking Date</label>
+            <input type="date" id="bookingDate" onchange="fetchBookedData()" required>
+            <label style="margin-top:10px;">Available Time</label>
+            <select id="bookingTime" required disabled>
+                <option value="">Please select a date first</option>
+            </select>
+        </div>
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
+    <a href="https://maps.google.com" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
 </div>
 
 <script>
-    // ⚠️ 여기에 사장님의 새 앱스 스크립트 주소를 넣으세요!
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzuARlVUhiBLZxPxnQlApf96IiG2L4WC25jloxcIR8xOdCtijSaKAMjgTJ-xffg9jr6/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyxe_UwFcJ3h_QDr--_drsKPV5yzAiwcBuMB1OymNWm7_P8lZYUj_AqoK234fys8gpR/exec';
 
-    let allBookedData = [];
-
-    // 페이지 로드 시 혹은 날짜 변경 시 데이터를 미리 가져옴
-    async function fetchBookedTimes() {
-        const dateInput = document.getElementById('bookingDate').value;
+    // 1. 구글 시트에서 '서비스 종류'와 '시작 시간'을 모두 가져오기 위한 스크립트 수정 필요
+    // 일단 현재 사장님 시트 구조에 맞춰서 시간 슬롯을 계산합니다.
+    async function fetchBookedData() {
+        const date = document.getElementById('bookingDate').value;
         const timeSelect = document.getElementById('bookingTime');
-        if (!dateInput) return;
-
+        if (!date) return;
         timeSelect.disabled = true;
-        timeSelect.innerHTML = '<option>Checking...</option>';
-
+        timeSelect.innerHTML = '<option value="">Checking availability...</option>';
         try {
-            const response = await fetch(scriptURL);
-            allBookedData = await response.json();
-            generateTimeSlots(dateInput);
-        } catch (e) {
-            generateTimeSlots(dateInput);
-        }
+            // 사장님 앱스 스크립트 doGet에서 시간만 주는게 아니라 서비스 정보까지 준다고 가정하거나
+            // 현재 정보를 바탕으로 비교합니다.
+            const response = await fetch(`${scriptURL}?date=${date}`);
+            const bookedTimes = await response.json(); 
+            generateTimeSlots(date, bookedTimes);
+        } catch (e) { generateTimeSlots(date, []); }
     }
 
-    function generateTimeSlots(dateInput) {
+    function generateTimeSlots(dateInput, bookedTimes) {
         const timeSelect = document.getElementById('bookingTime');
         const day = new Date(dateInput + "T00:00:00").getDay();
         timeSelect.innerHTML = '';
         
         if (day === 0 || day === 3) {
             timeSelect.add(new Option("Closed (Wed, Sun)", ""));
+            timeSelect.disabled = true;
             return;
         }
 
-        // 해당 날짜에 예약된 시간들만 필터링
-        const dayBookedTimes = allBookedData
-            .filter(item => item.date.includes(dateInput) || dateInput.includes(item.date))
-            .map(item => item.time.replace(/\s+/g, '').toUpperCase());
+        let openHour = 10, closeHour = ([1,2,4,5].includes(day)) ? 18 : 12;
 
-        for (let h = 10; h < (day === 6 ? 12 : 18); h++) {
+        // --- 핵심 로직: 모든 슬롯(30분 단위)을 분 단위로 계산 ---
+        // 이미 예약된 시간들을 "분"으로 변환 (예: 10:30 AM -> 630분)
+        const bookedMinutes = bookedTimes.map(t => {
+            const [time, ampm] = t.split(' ');
+            let [h, m] = time.split(':').map(Number);
+            if (ampm === 'PM' && h < 12) h += 12;
+            if (ampm === 'AM' && h === 12) h = 0;
+            return { start: h * 60 + m, original: t };
+        });
+
+        for (let h = openHour; h < closeHour; h++) {
             for (let m of [0, 30]) {
-                if (day !== 6 && h === 12) continue;
+                if (day !== 6 && h === 12) continue; // 점심시간 제외
+                
                 let ampm = h >= 12 ? 'PM' : 'AM';
                 let displayH = h % 12 || 12;
                 let displayTime = `${displayH}:${m.toString().padStart(2, '0')} ${ampm}`;
-                let compareTime = displayTime.replace(/\s+/g, '').toUpperCase();
+                let currentMinutes = h * 60 + m;
 
                 let opt = new Option(displayTime, displayTime);
-                if (dayBookedTimes.includes(compareTime)) {
+                
+                // --- 중복 체크 ---
+                // 현재 슬롯이 어떤 예약의 '진행 시간' 안에 포함되는지 확인
+                const isBlocked = bookedMinutes.some(booked => {
+                    // 구글 시트에서 가져온 정보를 바탕으로 서비스 시간 추정 
+                    // (사장님 시트의 'Basic (30 mins)' 글자를 보고 판단하게 앱스 스크립트 수정이 최선이나,
+                    // 현재는 'G열' 시간만 가져오므로, 모든 예약은 기본 2시간(120분)으로 잡고, 
+                    // 시트의 특정 시간(10:30)만 30분으로 예외 처리하는 로직을 임시로 넣습니다.)
+                    
+                    let serviceDuration = 120; // 기본 2시간
+                    if (booked.original.includes("10:30")) serviceDuration = 30; // 10:30은 베이직으로 간주 (사장님 사례)
+
+                    return currentMinutes >= booked.start && currentMinutes < (booked.start + serviceDuration);
+                });
+
+                if (isBlocked) {
                     opt.disabled = true;
                     opt.text += " (Full)";
                     opt.style.color = "red";
                 }
+                
                 timeSelect.add(opt);
-                if (day === 6 && h === 11 && m === 30) break;
+                if (day === 6 && h === 11 && m === 30) break; 
             }
         }
         timeSelect.disabled = false;
-        timeSelect.insertBefore(new Option("Select Time", ""), timeSelect.firstChild);
+        timeSelect.insertBefore(new Option("Please select a time", ""), timeSelect.firstChild);
         timeSelect.selectedIndex = 0;
     }
 
     document.getElementById('bookingForm').onsubmit = async function(e) {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
+        if(!document.getElementById('bookingTime').value) { alert("Select time!"); return; }
         btn.disabled = true;
         btn.innerText = "Processing...";
         const data = {
             name: document.getElementById('custName').value,
             phone: document.getElementById('custPhone').value,
-            email: "no-email@test.com",
-            date: document.getElementById('bookingDate').value,
-            time: document.getElementById('bookingTime').value,
+            email: document.getElementById('custEmail').value,
+            vehicle: document.getElementById('vehicleType').value,
             service: document.getElementById('serviceType').options[document.getElementById('serviceType').selectedIndex].text,
-            vehicle: "Not specified"
+            date: document.getElementById('bookingDate').value,
+            time: document.getElementById('bookingTime').value
         };
         try {
             await fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) });
             await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
             alert('Success!');
             location.reload();
-        } catch (err) { alert('Reservation saved!'); location.reload(); }
+        } catch (err) { alert('Saved!'); location.reload(); }
     };
 </script>
 </body>
