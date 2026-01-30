@@ -31,7 +31,6 @@
             <input type="text" id="custName" placeholder="Full Name" required style="margin-bottom:8px;">
             <input type="tel" id="custPhone" placeholder="Phone Number" required>
         </div>
-
         <div class="section">
             <label>Vehicle Type</label>
             <select id="vehicleType" required>
@@ -40,7 +39,6 @@
                 <option value="Van/SUV 7seats">Van / SUV (7 Seats)</option>
             </select>
         </div>
-
         <div class="section">
             <label>Service Type</label>
             <select id="serviceType" onchange="fetchBookedTimes()" required>
@@ -48,7 +46,6 @@
                 <option value="30">Basic (30 mins)</option>
             </select>
         </div>
-
         <div class="section">
             <label>Booking Date</label>
             <input type="date" id="bookingDate" onchange="fetchBookedTimes()" required>
@@ -81,7 +78,9 @@
     }
 
     function timeToMin(tStr) {
-        let [time, ampm] = tStr.split(' ');
+        // 시트 데이터에 포함된 불필요한 공백 제거 후 분석
+        let cleanStr = tStr.trim().toUpperCase();
+        let [time, ampm] = cleanStr.split(' ');
         let [h, m] = time.split(':').map(Number);
         if (ampm === 'PM' && h !== 12) h += 12;
         if (ampm === 'AM' && h === 12) h = 0;
@@ -98,10 +97,11 @@
             timeSelect.add(new Option("Closed (Wed, Sun)", "")); return;
         }
 
+        // 시트의 데이터(시간|서비스)를 바탕으로 점유된 시간대 계산
         const busyPeriods = bookedData.map(entry => {
             const parts = entry.split('|');
             const start = timeToMin(parts[0]);
-            const dur = (parts[1] && parts[1].toLowerCase().includes("premium")) ? 120 : 30;
+            const dur = (parts[1] && parts[1].toUpperCase().includes("PREMIUM")) ? 120 : 30;
             return { start: start, end: start + dur };
         });
 
@@ -109,23 +109,25 @@
 
         for (let h = 10; h < closeTime; h++) {
             for (let m of [0, 30]) {
-                if (day !== 6 && h === 12) continue;
-                if (day === 6 && h === 11 && m === 30) break;
+                if (day !== 6 && h === 12) continue; // 평일 점심시간 제외
+                if (day === 6 && h === 11 && m === 30) break; // 토요일 마감
 
                 const currentStart = h * 60 + m;
                 const currentEnd = currentStart + selectedDuration;
                 let ampm = h >= 12 ? 'PM' : 'AM';
                 let dispH = h % 12 || 12;
                 let timeStr = `${dispH}:${m.toString().padStart(2, '0')} ${ampm}`;
+                
                 let opt = new Option(timeStr, timeStr);
 
+                // 중복 및 연속 시간 차단 로직 적용
                 const isFull = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
-                const isLunch = (day !== 6 && currentStart < 780 && currentEnd > 720);
+                const isLunchOverlap = (day !== 6 && currentStart < 780 && currentEnd > 720);
                 const isOverClose = currentEnd > (closeTime * 60);
 
                 if (isFull) {
                     opt.disabled = true; opt.text += " (Full)"; opt.style.color = "red";
-                } else if (isLunch || isOverClose) {
+                } else if (isLunchOverlap || isOverClose) {
                     opt.disabled = true; opt.text += " (Time Short)"; opt.style.color = "orange";
                 }
                 timeSelect.add(opt);
