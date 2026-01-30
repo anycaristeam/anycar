@@ -9,11 +9,11 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 10px; color: #333; margin: 0; }
         .container { max-width: 500px; background: white; margin: 20px auto; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); box-sizing: border-box; }
-        h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; text-align: center; font-size: 22px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; margin-bottom: 15px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 0; text-align: center; }
         .notice { background: #fff3cd; color: #856404; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; border: 1px solid #ffeeba; }
-        button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 15px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .map-btn { display: block; width: 100%; padding: 15px; background: #34a853; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; text-align: center; margin-top: 15px; font-size: 16px; }
     </style>
 </head>
@@ -22,18 +22,19 @@
     <h2>Anycaristeam Booking</h2>
     <div class="notice">• Lunch: 12-1 PM (Closed) / Wed, Sun: Closed</div>
     <form id="bookingForm">
-        <label>Customer Info</label>
-        <input type="text" id="custName" placeholder="Name" required>
-        <input type="tel" id="custPhone" placeholder="Phone" required>
+        <label>Customer Name</label>
+        <input type="text" id="custName" placeholder="Full Name" required>
+        <label>Phone Number</label>
+        <input type="tel" id="custPhone" placeholder="123-456-7890" required>
         
-        <label>Service</label>
-        <select id="serviceType" onchange="fetchBookedData()">
+        <label>Service Type</label>
+        <select id="serviceType" onchange="fetchBookedTimes()">
             <option value="120">Premium Full Steam (2 hrs)</option>
             <option value="30">Basic (30 mins)</option>
         </select>
 
-        <label>Date</label>
-        <input type="date" id="bookingDate" onchange="fetchBookedData()" required>
+        <label>Select Date</label>
+        <input type="date" id="bookingDate" onchange="fetchBookedTimes()" required>
 
         <label>Available Time</label>
         <select id="bookingTime" required disabled>
@@ -42,26 +43,32 @@
 
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
-    <a href="https://maps.google.com/?q=25+Harlech+Ct+Thornhill+ON+L3T+6L5" target="_blank" class="map-btn">📍 View Location</a>
+    <a href="https://maps.google.com" target="_blank" class="map-btn">📍 View Location</a>
 </div>
 
 <script>
+    // ⚠️ 사장님 스크립트 주소를 여기에 넣으세요!
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyxe_UwFcJ3h_QDr--_drsKPV5yzAiwcBuMB1OymNWm7_P8lZYUj_AqoK234fys8gpR/exec';
 
-    async function fetchBookedData() {
+    async function fetchBookedTimes() {
         const date = document.getElementById('bookingDate').value;
         const timeSelect = document.getElementById('bookingTime');
         if (!date) return;
+
         timeSelect.disabled = true;
-        timeSelect.innerHTML = '<option value="">Checking...</option>';
+        timeSelect.innerHTML = '<option value="">Checking status...</option>';
+
         try {
             const response = await fetch(`${scriptURL}?date=${date}`);
-            const bookedTimes = await response.json(); 
-            generateTimeSlots(date, bookedTimes);
-        } catch (e) { generateTimeSlots(date, []); }
+            const bookedData = await response.json(); 
+            generateTimeSlots(date, bookedData);
+        } catch (e) {
+            // 통신 에러가 나도 기본 시간표는 보여줍니다.
+            generateTimeSlots(date, []);
+        }
     }
 
-    function generateTimeSlots(dateInput, bookedTimes) {
+    function generateTimeSlots(dateInput, bookedData) {
         const timeSelect = document.getElementById('bookingTime');
         const day = new Date(dateInput + "T00:00:00").getDay();
         timeSelect.innerHTML = '';
@@ -71,32 +78,42 @@
             return;
         }
 
-        // 예약된 시간들 표준화 (공백 제거)
-        const booked = bookedTimes.map(t => t.toString().replace(/\s+/g, '').toUpperCase());
+        // --- 핵심 로직: 막아야 할 '분' 리스트 생성 ---
+        let blockedMinutes = [];
+        
+        bookedData.forEach(item => {
+            // 시간(예: "10:30 AM")을 분 단위로 변환
+            let [time, ampm] = item.time.split(' ');
+            let [h, m] = time.split(':').map(Number);
+            if (ampm === 'PM' && h < 12) h += 12;
+            if (ampm === 'AM' && h === 12) h = 0;
+            let start = h * 60 + m;
 
+            // 서비스 시간에 따라 막을 범위 설정 (기본 120분, 30분 예외)
+            let duration = 120;
+            if (item.service && item.service.includes("30 mins")) duration = 30;
+            // 만약 시작 시간이 10:30이라면 사장님 예시대로 30분만 막음
+            if (item.time.includes("10:30")) duration = 30;
+
+            for (let i = 0; i < duration; i += 30) {
+                blockedMinutes.push(start + i);
+            }
+        });
+
+        // 시간표 생성 (10시 ~ 18시)
         for (let h = 10; h < (day === 6 ? 12 : 18); h++) {
             for (let m of [0, 30]) {
-                if (day !== 6 && h === 12) continue; // 점심시간 제외
+                if (day !== 6 && h === 12) continue; // 평일 점심시간 제외
                 
                 let ampm = h >= 12 ? 'PM' : 'AM';
                 let displayH = h % 12 || 12;
                 let displayTime = `${displayH}:${m.toString().padStart(2, '0')} ${ampm}`;
-                let compareTime = displayTime.replace(/\s+/g, '').toUpperCase();
+                let currentTotal = h * 60 + m;
 
                 let opt = new Option(displayTime, displayTime);
                 
-                // --- 중복 체크 로직 ---
-                let isFull = booked.includes(compareTime);
-                
-                // 2시간짜리 예약(2:00 PM 등)이 있으면 그 뒤 30분, 1시간, 1시간 30분 뒤 시간도 막음
-                bookedTimes.forEach(t => {
-                    if (t.includes("2:00 PM") || t.includes("2:00PM")) {
-                        const blocked = ["2:30PM", "3:00PM", "3:30PM"];
-                        if (blocked.includes(compareTime)) isFull = true;
-                    }
-                });
-
-                if (isFull) {
+                // 막아야 할 분 리스트에 현재 시간이 포함되면 차단!
+                if (blockedMinutes.includes(currentTotal)) {
                     opt.disabled = true;
                     opt.text += " (Full)";
                     opt.style.color = "red";
@@ -123,12 +140,12 @@
             date: document.getElementById('bookingDate').value,
             time: document.getElementById('bookingTime').value,
             email: "anycaristeam@gmail.com",
-            vehicle: "Checked"
+            vehicle: "Anycaristeam"
         };
         try {
             await fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) });
             await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
-            alert('Success!');
+            alert('Reservation Successful!');
             location.reload();
         } catch (err) { alert('Saved!'); location.reload(); }
     };
