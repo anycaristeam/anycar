@@ -22,38 +22,33 @@
     <h2>Anycaristeam Booking</h2>
     <div class="notice">• Lunch: 12-1 PM (Closed) / Wed, Sun: Closed</div>
     <form id="bookingForm">
-        <label>Name</label><input type="text" id="custName" required>
-        <label>Phone</label><input type="tel" id="custPhone" required>
+        <label>Customer Name</label><input type="text" id="custName" required>
+        <label>Phone Number</label><input type="tel" id="custPhone" required>
         <label>Service</label>
         <select id="serviceType"><option value="120">Premium Full Steam (2 hrs)</option><option value="30">Basic (30 mins)</option></select>
-        <label>Date</label><input type="date" id="bookingDate" onchange="fetchBookedTimes()" required>
-        <label>Time</label>
+        <label>Select Date</label><input type="date" id="bookingDate" onchange="fetchBookedTimes()" required>
+        <label>Available Time</label>
         <select id="bookingTime" required disabled><option value="">Select date first</option></select>
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
-    <a href="https://maps.app.goo.gl/YourMapLink" target="_blank" class="map-btn">📍 View Location</a>
 </div>
 
 <script>
-    // ⚠️ 사장님의 구글 앱스 스크립트 URL을 여기에 꼭 넣으세요!
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyNlmjBDgDfUWJnKmW6Xy9RRNSjPRJXAiF-j7olbKqcRJKkWe35d5jByIHKF6cLgYs/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyxe_UwFcJ3h_QDr--_drsKPV5yzAiwcBuMB1OymNWm7_P8lZYUj_AqoK234fys8gpR/exec';
 
     async function fetchBookedTimes() {
-        const date = document.getElementById('bookingDate').value;
+        const dateInput = document.getElementById('bookingDate').value;
         const timeSelect = document.getElementById('bookingTime');
-        if (!date) return;
+        if (!dateInput) return;
 
         timeSelect.disabled = true;
         timeSelect.innerHTML = '<option value="">Checking availability...</option>';
 
         try {
-            // 구글 시트에서 이미 예약된 시간 가져오기
-            const response = await fetch(`${scriptURL}?date=${date}`);
-            const bookedTimes = await response.json(); // 예: ["10:30 AM", "2:00 PM"]
-            generateTimeSlots(date, bookedTimes);
-        } catch (e) {
-            generateTimeSlots(date, []); // 통신 에러 시에도 리스트는 띄움
-        }
+            const response = await fetch(`${scriptURL}?date=${dateInput}`);
+            const bookedTimes = await response.json(); 
+            generateTimeSlots(dateInput, bookedTimes);
+        } catch (e) { generateTimeSlots(dateInput, []); }
     }
 
     function generateTimeSlots(dateInput, bookedTimes) {
@@ -66,27 +61,22 @@
             return;
         }
 
-        // 시트 예약 데이터 표준화 (공백 제거)
+        // 시트의 "2:00 PM"과 홈페이지의 형식을 완벽하게 맞춤
         const normalizedBooked = bookedTimes.map(t => t.toString().replace(/\s+/g, '').toUpperCase());
 
         for (let h = 10; h < (day === 6 ? 12 : 18); h++) {
             for (let m of [0, 30]) {
-                if (day !== 6 && h === 12) continue; // 평일 점심시간 제외
-                
+                if (day !== 6 && h === 12) continue; // 점심 제외
                 let ampm = h >= 12 ? 'PM' : 'AM';
-                let displayH = h % 12 || 12;
-                let displayTime = `${displayH}:${m.toString().padStart(2, '0')} ${ampm}`;
+                let displayTime = `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${ampm}`;
                 let compareTime = displayTime.replace(/\s+/g, '').toUpperCase();
 
                 let opt = new Option(displayTime, displayTime);
-                
-                // 만약 시트 예약 목록에 이 시간이 있다면 선택 불가 처리!
                 if (normalizedBooked.includes(compareTime)) {
                     opt.disabled = true;
                     opt.text += " (Full)";
                     opt.style.color = "red";
                 }
-                
                 timeSelect.add(opt);
                 if (day === 6 && h === 11 && m === 30) break;
             }
@@ -107,17 +97,15 @@
             date: document.getElementById('bookingDate').value,
             time: document.getElementById('bookingTime').value,
             service: document.getElementById('serviceType').options[document.getElementById('serviceType').selectedIndex].text,
-            email: "anycaristeam@gmail.com",
-            vehicle: "Checked"
+            email: "anycaristeam@gmail.com", vehicle: "Anycaristeam"
         };
         try {
             await fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) });
             await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
             alert('Reservation Successful!');
             location.reload();
-        } catch (err) { alert('Successfully saved!'); location.reload(); }
+        } catch (err) { alert('Saved!'); location.reload(); }
     };
 </script>
 </body>
 </html>
-
