@@ -54,7 +54,7 @@
         </div>
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
-    <a href="https://www.google.com/maps/search/?api=1&query=25+Harlech+Ct+Thornhill+ON+L3T+6L5" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
+    <a href="https://maps.google.com/?q=25+Harlech+Ct+Thornhill+ON+L3T+6L55" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
 </div>
 
 <script>
@@ -145,10 +145,7 @@
             await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
             alert('Reservation Successful!');
             location.reload();
-        } catch (err) { 
-            alert('Reservation saved!'); 
-            location.reload(); 
-        }
+        } catch (err) { alert('Reservation saved!'); location.reload(); }
     };
 </script>
 </body>
