@@ -22,7 +22,7 @@
 <div class="container">
     <h2>Anycaristeam Booking</h2>
     <div class="notice">
-        • Wed, Sun: Closed | Lunch (12:00-1:00 PM)<br>
+        • Wed, Sun: Closed | Lunch (12:00-1:00 PM) <br>
         • Premium (2 hrs) / Basic (30 mins)
     </div>
     <form id="bookingForm">
@@ -60,4 +60,84 @@
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
     
-    <a href="
+    <a href="https://maps.google.com/?q=0+Harlech+Ct" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
+</div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyxe_UwFcJ3h_QDr--_drsKPV5yzAiwcBuMB1OymNWm7_P8lZYUj_AqoK234fys8gpR/exec';
+
+    async function fetchBookedTimes() {
+        const dateInput = document.getElementById('bookingDate').value;
+        const timeSelect = document.getElementById('bookingTime');
+        if (!dateInput) return;
+        timeSelect.disabled = true;
+        timeSelect.innerHTML = '<option value="">Checking schedule...</option>';
+
+        try {
+            const response = await fetch(`${scriptURL}?date=${dateInput}`);
+            const bookedData = await response.json(); 
+            generateSlots(dateInput, bookedData);
+        } catch (e) { generateSlots(dateInput, []); }
+    }
+
+    function timeToMin(tStr) {
+        let [time, ampm] = tStr.split(' ');
+        let [h, m] = time.split(':').map(Number);
+        if (ampm === 'PM' && h !== 12) h += 12;
+        if (ampm === 'AM' && h === 12) h = 0;
+        return h * 60 + m;
+    }
+
+    function generateSlots(dateInput, bookedData) {
+        const timeSelect = document.getElementById('bookingTime');
+        const selectedDuration = parseInt(document.getElementById('serviceType').value);
+        const day = new Date(dateInput.replace(/-/g, '/')).getDay();
+        timeSelect.innerHTML = '';
+
+        if (day === 0 || day === 3) {
+            timeSelect.add(new Option("Closed (Wed, Sun)", "")); return;
+        }
+
+        const busyPeriods = bookedData.map(entry => {
+            const parts = entry.split('|');
+            const start = timeToMin(parts[0]);
+            const dur = (parts[1] && parts[1].toLowerCase().includes("premium")) ? 120 : 30;
+            return { start: start, end: start + dur };
+        });
+
+        const closeTime = (day === 6) ? 12 : 18;
+
+        for (let h = 10; h < closeTime; h++) {
+            for (let m of [0, 30]) {
+                if (day !== 6 && h === 12) continue;
+                if (day === 6 && h === 11 && m === 30) break;
+
+                const currentStart = h * 60 + m;
+                const currentEnd = currentStart + selectedDuration;
+                let ampm = h >= 12 ? 'PM' : 'AM';
+                let dispH = h % 12 || 12;
+                let timeStr = `${dispH}:${m.toString().padStart(2, '0')} ${ampm}`;
+                let opt = new Option(timeStr, timeStr);
+
+                const isFull = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
+                const isLunch = (day !== 6 && currentStart < 780 && currentEnd > 720);
+                const isOverClose = currentEnd > (closeTime * 60);
+
+                if (isFull) {
+                    opt.disabled = true; opt.text += " (Full)"; opt.style.color = "red";
+                } else if (isLunch || isOverClose) {
+                    opt.disabled = true; opt.text += " (Time Short)"; opt.style.color = "orange";
+                }
+                timeSelect.add(opt);
+            }
+        }
+        timeSelect.disabled = false;
+        timeSelect.insertBefore(new Option("Please select a time", ""), timeSelect.firstChild);
+        timeSelect.selectedIndex = 0;
+    }
+
+    document.getElementById('bookingForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true; btn.innerText = "Processing...";
+        const data
