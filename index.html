@@ -74,10 +74,7 @@
             const response = await fetch(`${scriptURL}?date=${dateInput}`);
             const bookedData = await response.json(); 
             generateSlots(dateInput, bookedData);
-        } catch (e) { 
-            console.error(e);
-            generateSlots(dateInput, []); 
-        }
+        } catch (e) { generateSlots(dateInput, []); }
     }
 
     function timeToMin(tStr) {
@@ -92,10 +89,9 @@
     function generateSlots(dateInput, bookedData) {
         const timeSelect = document.getElementById('bookingTime');
         const selectedDuration = parseInt(document.getElementById('serviceType').value);
-        const dateParts = dateInput.split('-');
-        const day = new Date(dateParts[0], dateParts[1]-1, dateParts[2]).getDay();
-        
+        const day = new Date(dateInput.replace(/-/g, '/')).getDay();
         timeSelect.innerHTML = '';
+
         if (day === 0 || day === 3) {
             timeSelect.add(new Option("Closed (Wed, Sun)", "")); return;
         }
@@ -107,9 +103,9 @@
             return { start: start, end: start + dur };
         });
 
-        const closeHour = (day === 6) ? 12 : 18;
+        const closeTime = (day === 6) ? 12 : 18;
 
-        for (let h = 10; h < closeHour; h++) {
+        for (let h = 10; h < closeTime; h++) {
             for (let m of [0, 30]) {
                 if (day !== 6 && h === 12) continue;
                 if (day === 6 && h === 11 && m === 30) break;
@@ -123,7 +119,7 @@
 
                 const isFull = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
                 const isLunch = (day !== 6 && currentStart < 780 && currentEnd > 720);
-                const isOverClose = currentEnd > (closeHour * 60);
+                const isOverClose = currentEnd > (closeTime * 60);
 
                 if (isFull) {
                     opt.disabled = true; opt.text += " (Full)"; opt.style.color = "red";
