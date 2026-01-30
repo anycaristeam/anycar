@@ -54,7 +54,7 @@
         </div>
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
-    <a href="https://maps.google.com/?q=25+Harlech+Ct+Thornhill+ON+L3T+6L55" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
+    <a href="https://maps.google.com/?q=25+Harlech+Ct+Thornhill" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
 </div>
 
 <script>
@@ -125,28 +125,4 @@
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
         const timeVal = document.getElementById('bookingTime').value;
-        if(!timeVal) { alert("Please select a time."); return; }
-
-        btn.disabled = true;
-        btn.innerText = "Processing...";
-
-        const data = {
-            name: document.getElementById('custName').value,
-            phone: document.getElementById('custPhone').value,
-            email: document.getElementById('custEmail').value,
-            vehicle: document.getElementById('vehicleType').value,
-            service: document.getElementById('serviceType').options[document.getElementById('serviceType').selectedIndex].text,
-            date: document.getElementById('bookingDate').value,
-            time: timeVal
-        };
-
-        try {
-            await fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) });
-            await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
-            alert('Reservation Successful!');
-            location.reload();
-        } catch (err) { alert('Reservation saved!'); location.reload(); }
-    };
-</script>
-</body>
-</html>
+        if(!timeVal)
