@@ -117,12 +117,17 @@
                 let timeStr = `${dispH}:${m.toString().padStart(2, '0')} ${ampm}`;
                 let opt = new Option(timeStr, timeStr);
 
-                const isFull = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
+                // 중복 체크: 이미 예약된 '시작 시간'과 정확히 일치하는지 확인
+                const isAlreadyBooked = busyPeriods.some(p => currentStart === p.start);
+                // 겹침 체크: 다른 예약 시간대 중간에 끼어드는지 확인
+                const isOverlapped = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
                 const isLunch = (day !== 6 && currentStart < 780 && currentEnd > 720);
                 const isOverClose = currentEnd > (closeTime * 60);
 
-                if (isFull) {
+                if (isAlreadyBooked) {
                     opt.disabled = true; opt.text += " (Full)"; opt.style.color = "red";
+                } else if (isOverlapped) {
+                    opt.disabled = true; opt.text += " (Conflict)"; opt.style.color = "red";
                 } else if (isLunch || isOverClose) {
                     opt.disabled = true; opt.text += " (Time Short)"; opt.style.color = "orange";
                 }
