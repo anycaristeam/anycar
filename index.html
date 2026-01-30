@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anycaristeam Booking</title>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script type="text/javascript"> (function(){ emailjs.init("BIDmuBZ6ZVPn--iE8"); })(); </script>
+    <script type="text/javascript"> (function(){ emailjs.init("BIDmuBZ6VPn--iE8"); })(); </script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 10px; color: #333; margin: 0; }
         .container { max-width: 500px; background: white; margin: 20px auto; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); box-sizing: border-box; }
@@ -38,11 +38,10 @@
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
     
-    <a href="https://maps.google.com/?q=Anycaristeam" target="_blank" class="map-btn">📍 View Our Location</a>
+    <a href="https://www.google.com/maps/search/?api=1&query=25+Harlech+Ct+Thornhill+ON+L3T+6L5" target="_blank" class="map-btn">📍 View Our Location</a>
 </div>
 
 <script>
-    // 사장님의 구글 앱스 스크립트 URL
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyxe_UwFcJ3h_QDr--_drsKPV5yzAiwcBuMB1OymNWm7_P8lZYUj_AqoK234fys8gpR/exec';
 
     async function fetchBookedTimes() {
@@ -72,12 +71,11 @@
             return;
         }
 
-        // 시트 예약 데이터 표준화
         const normalizedBooked = bookedTimes.map(t => t.toString().replace(/\s+/g, '').toUpperCase());
 
         for (let h = 10; h < (day === 6 ? 12 : 18); h++) {
             for (let m of [0, 30]) {
-                if (day !== 6 && h === 12) continue; // 평일 점심시간 제외
+                if (day !== 6 && h === 12) continue;
                 
                 let ampm = h >= 12 ? 'PM' : 'AM';
                 let displayH = h % 12 || 12;
@@ -112,4 +110,16 @@
             date: document.getElementById('bookingDate').value,
             time: document.getElementById('bookingTime').value,
             service: document.getElementById('serviceType').options[document.getElementById('serviceType').selectedIndex].text,
-            email: "anycaristeam
+            email: "anycaristeam@gmail.com",
+            vehicle: "Anycaristeam"
+        };
+        try {
+            await fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) });
+            await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
+            alert('Reservation Successful!');
+            location.reload();
+        } catch (err) { alert('Saved!'); location.reload(); }
+    };
+</script>
+</body>
+</html>
