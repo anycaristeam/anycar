@@ -15,6 +15,7 @@
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
         .notice { background: #fff3cd; color: #856404; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; border: 1px solid #ffeeba; line-height: 1.5; }
         button { width: 100%; padding: 15px; background: #3498db; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
         .map-btn { display: block; width: 100%; padding: 15px; background: #34a853; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; text-align: center; margin-top: 15px; box-sizing: border-box; font-size: 16px; }
     </style>
 </head>
@@ -54,18 +55,19 @@
         </div>
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
-    <a href="https://www.google.com/maps?q=25+Harlech+Ct,+Thornhill,+ON+L3T+6L5" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
+    <a href="https://maps.app.goo.gl/uX3L5S5xW5r4uYpG9" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyxe_UwFcJ3h_QDr--_drsKPV5yzAiwcBuMB1OymNWm7_P8lZYUj_AqoK234fys8gpR/exec';
+    // ⚠️ 여기 사장님 스크립트 주소로 꼭 바꾸세요!
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwXy2xZCge4L6VbKiQk-UfXljTAJuoBh7KbYCl-LEJ4xaKpJzk3ExVYvt4sWDEWofo/exec';
 
     async function fetchBookedTimes() {
         const date = document.getElementById('bookingDate').value;
         const timeSelect = document.getElementById('bookingTime');
         if (!date) return;
         timeSelect.disabled = true;
-        timeSelect.innerHTML = '<option value="">Checking availability...</option>';
+        timeSelect.innerHTML = '<option value="">Checking...</option>';
         try {
             const response = await fetch(`${scriptURL}?date=${date}`);
             const bookedTimes = await response.json(); 
@@ -76,8 +78,7 @@
     function generateTimeSlots(dateInput, bookedTimes) {
         const duration = parseInt(document.getElementById('serviceType').value);
         const timeSelect = document.getElementById('bookingTime');
-        const dateParts = dateInput.split('-');
-        const day = new Date(dateParts[0], dateParts[1]-1, dateParts[2]).getDay();
+        const day = new Date(dateInput + "T00:00:00").getDay();
         timeSelect.innerHTML = '';
         
         if (day === 0 || day === 3) {
@@ -87,9 +88,7 @@
         }
 
         let openHour = 10, closeHour = ([1,2,4,5].includes(day)) ? 18 : 12;
-        
-        // 시트의 "2:00 PM"과 홈페이지의 "2:00 PM"을 공백 없이 대문자로 맞춰서 비교
-        const normalizedBooked = bookedTimes.map(t => t.toString().replace(/\s+/g, '').toUpperCase());
+        const normalizedBooked = bookedTimes.map(t => t.toString().replace(/\s/g, '').toUpperCase());
 
         let hasAvailable = false;
         for (let h = openHour; h < closeHour; h++) {
@@ -99,7 +98,7 @@
                 let displayTime = `${displayH}:${m.toString().padStart(2, '0')} ${ampm}`;
                 let compareTime = displayTime.replace(/\s+/g, '').toUpperCase();
                 
-                if (day !== 6 && h === 12) continue; // 점심시간 제외
+                if (day !== 6 && h === 12) continue; // 점심 제외
 
                 const isBooked = normalizedBooked.includes(compareTime);
                 let opt = new Option(displayTime, displayTime);
@@ -115,7 +114,7 @@
             }
         }
         timeSelect.disabled = false;
-        timeSelect.insertBefore(new Option("Please select a time", ""), timeSelect.firstChild);
+        timeSelect.insertBefore(new Option("Select Time", ""), timeSelect.firstChild);
         timeSelect.selectedIndex = 0;
     }
 
@@ -137,9 +136,9 @@
         try {
             await fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) });
             await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
-            alert('Success!');
+            alert('Successful!');
             location.reload();
-        } catch (err) { alert('Saved!'); location.reload(); }
+        } catch (err) { alert('Successfully saved!'); location.reload(); }
     };
 </script>
 </body>
