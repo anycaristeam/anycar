@@ -58,7 +58,6 @@
 </div>
 
 <script>
-    // ⚠️ 사장님의 앱스 스크립트 주소를 여기에 넣으세요!
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyxe_UwFcJ3h_QDr--_drsKPV5yzAiwcBuMB1OymNWm7_P8lZYUj_AqoK234fys8gpR/exec';
 
     async function fetchBookedTimes() {
@@ -67,7 +66,7 @@
         if (!dateInput) return;
 
         timeSelect.disabled = true;
-        timeSelect.innerHTML = '<option value="">Checking status...</option>';
+        timeSelect.innerHTML = '<option value="">Checking availability...</option>';
 
         try {
             const response = await fetch(`${scriptURL}?date=${dateInput}`);
@@ -80,19 +79,25 @@
 
     function generateTimeSlots(dateInput, bookedTimes) {
         const timeSelect = document.getElementById('bookingTime');
-        const day = new Date(dateInput + "T00:00:00").getDay();
+        const dateParts = dateInput.split('-');
+        const day = new Date(dateParts[0], dateParts[1]-1, dateParts[2]).getDay();
+        
         timeSelect.innerHTML = '';
         
         if (day === 0 || day === 3) {
             timeSelect.add(new Option("Closed (Wed, Sun)", ""));
+            timeSelect.disabled = true;
             return;
         }
 
+        let openHour = 10;
+        let closeHour = ([1,2,4,5].includes(day)) ? 18 : 12;
+
         const normalizedBooked = bookedTimes.map(t => t.toString().replace(/\s+/g, '').toUpperCase());
 
-        for (let h = 10; h < (day === 6 ? 12 : 18); h++) {
+        for (let h = openHour; h < closeHour; h++) {
             for (let m of [0, 30]) {
-                if (day !== 6 && h === 12) continue; // 점심시간 제외
+                if (day !== 6 && h === 12) continue;
                 
                 let ampm = h >= 12 ? 'PM' : 'AM';
                 let displayH = h % 12 || 12;
@@ -119,23 +124,31 @@
     document.getElementById('bookingForm').onsubmit = async function(e) {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
+        const timeVal = document.getElementById('bookingTime').value;
+        if(!timeVal) { alert("Please select a time."); return; }
+
         btn.disabled = true;
         btn.innerText = "Processing...";
+
         const data = {
             name: document.getElementById('custName').value,
             phone: document.getElementById('custPhone').value,
-            date: document.getElementById('bookingDate').value,
-            time: document.getElementById('bookingTime').value,
-            service: document.getElementById('serviceType').options[document.getElementById('serviceType').selectedIndex].text,
             email: document.getElementById('custEmail').value,
-            vehicle: document.getElementById('vehicleType').value
+            vehicle: document.getElementById('vehicleType').value,
+            service: document.getElementById('serviceType').options[document.getElementById('serviceType').selectedIndex].text,
+            date: document.getElementById('bookingDate').value,
+            time: timeVal
         };
+
         try {
             await fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) });
             await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
             alert('Reservation Successful!');
             location.reload();
-        } catch (err) { alert('Successfully saved!'); location.reload(); }
+        } catch (err) { 
+            alert('Reservation saved!'); 
+            location.reload(); 
+        }
     };
 </script>
 </body>
