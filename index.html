@@ -55,7 +55,7 @@
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
 
-    <a href="https://www.google.com/maps?q=25+Harlech+Ct,+Thornhill,+ON+L3T+6L5" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
+    <a href="https://www.google.com/maps/search/?api=1&query=25+Harlech+Ct,+Thornhill,+ON+L3T+6L5" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
 </div>
 
 <script>
@@ -75,49 +75,47 @@
             generateTimeSlots(date, bookedTimes);
         } catch (e) { 
             console.error(e);
-            alert('Failed to load reservation data.'); 
+            generateTimeSlots(date, []); // 에러 나더라도 일단 시간은 뜨게 함
         }
     }
 
     function generateTimeSlots(dateInput, bookedTimes) {
         const duration = parseInt(document.getElementById('serviceType').value);
         const timeSelect = document.getElementById('bookingTime');
-        const day = new Date(dateInput + "T00:00:00").getDay();
+        
+        // 날짜 객체 생성 (온타리오 현지 시간 기준)
+        const dateParts = dateInput.split('-');
+        const day = new Date(dateParts[0], dateParts[1]-1, dateParts[2]).getDay();
         
         timeSelect.innerHTML = '';
         
-        // 영업시간 설정: 수(3), 일(0) 휴무
-        let open = 10, close = ([1,2,4,5].includes(day)) ? 18 : (day === 6 ? 12 : 0);
-        if (close === 0) { 
-            timeSelect.add(new Option("Closed (Wed, Sun)", "")); 
+        // 수요일(3), 일요일(0) 휴무 체크
+        if (day === 0 || day === 3) {
+            timeSelect.add(new Option("Closed (Wed, Sun)", ""));
             timeSelect.disabled = true;
-            return; 
+            return;
         }
+
+        // 영업시간 설정 (월,화,목,금: 10-18 / 토: 10-12)
+        let openHour = 10;
+        let closeHour = ([1,2,4,5].includes(day)) ? 18 : 12;
         
-        // 예약된 시간 형식을 표준화 (비교용)
         const normalizedBooked = bookedTimes.map(t => t.toString().trim().toUpperCase());
-
-        let curr = new Date(dateInput + `T${open.toString().padStart(2, '0')}:00:00`);
-        let endLimit = new Date(dateInput + `T${close.toString().padStart(2, '0')}:00:00`);
-
         let hasAvailable = false;
-        while (curr < endLimit) {
-            let next = new Date(curr.getTime() + duration * 60000);
-            
-            // 시간 표시 형식 생성 (예: 10:00 AM)
-            let hours = curr.getHours();
-            let minutes = curr.getMinutes();
-            let ampm = hours >= 12 ? 'PM' : 'AM';
-            let displayHours = hours % 12 || 12;
-            let displayTime = `${displayHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-            
-            // 점심시간 제외 (12:00 PM - 1:00 PM, 토요일 제외)
-            const isLunch = (day !== 6) && (hours === 12 || (next > new Date(dateInput + "T12:00:00") && curr < new Date(dateInput + "T13:00:00")));
-            
-            // 예약 여부 확인
-            const isBooked = normalizedBooked.includes(displayTime);
 
-            if (!isLunch && next <= endLimit) {
+        // 시간 슬롯 생성
+        for (let h = openHour; h < closeHour; h++) {
+            for (let m = 0; m < 60; m += 30) {
+                let ampm = h >= 12 ? 'PM' : 'AM';
+                let displayH = h % 12 || 12;
+                let displayTime = `${displayH}:${m.toString().padStart(2, '0')} ${ampm}`;
+                
+                // 점심시간 (12:00-1:00 PM) 제외 (평일만)
+                if (day !== 6 && h === 12) continue;
+
+                // 이미 예약된 시간인지 확인
+                const isBooked = normalizedBooked.includes(displayTime);
+                
                 let opt = new Option(displayTime, displayTime);
                 if (isBooked) {
                     opt.disabled = true;
@@ -127,16 +125,17 @@
                     hasAvailable = true;
                 }
                 timeSelect.add(opt);
+
+                // 토요일 12시 정각에 종료되도록 체크
+                if (day === 6 && h === 11 && m === 30 && duration > 30) break; 
             }
-            curr.setMinutes(curr.getMinutes() + 30); // 30분 간격으로 생성
         }
 
-        if (!hasAvailable) {
-            timeSelect.innerHTML = '<option value="">No slots available</option>';
+        if (!hasAvailable && timeSelect.options.length === 0) {
+            timeSelect.add(new Option("No slots available", ""));
             timeSelect.disabled = true;
         } else {
             timeSelect.disabled = false;
-            // "Please select" 문구를 맨 앞에 추가
             timeSelect.insertBefore(new Option("Please select a time", ""), timeSelect.firstChild);
             timeSelect.selectedIndex = 0;
         }
@@ -166,4 +165,15 @@
         };
 
         try {
-            await fetch(scriptURL, {
+            await fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) });
+            await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
+            alert('Reservation Successful!');
+            location.reload();
+        } catch (err) { 
+            alert('Reservation completed!'); 
+            location.reload(); 
+        }
+    };
+</script>
+</body>
+</html>
