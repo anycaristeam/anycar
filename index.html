@@ -55,7 +55,7 @@
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
 
-    <a href="https://www.google.com/maps/search/?api=1&query=25+Harlech+Ct+Thornhill+ON+L3T+6L5" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
+    <a href="https://www.google.com/maps?q=25+Harlech+Ct,+Thornhill,+ON+L3T+6L5" target="_blank" class="map-btn">📍 View Location on Google Maps</a>
 </div>
 
 <script>
@@ -65,51 +65,96 @@
         const date = document.getElementById('bookingDate').value;
         const timeSelect = document.getElementById('bookingTime');
         if (!date) return;
+
         timeSelect.disabled = true;
-        timeSelect.innerHTML = '<option value="">Checking...</option>';
+        timeSelect.innerHTML = '<option value="">Checking available times...</option>';
+
         try {
             const response = await fetch(`${scriptURL}?date=${date}`);
             const bookedTimes = await response.json(); 
             generateTimeSlots(date, bookedTimes);
-        } catch (e) { alert('Failed to load data.'); }
+        } catch (e) { 
+            console.error(e);
+            alert('Failed to load reservation data.'); 
+        }
     }
 
     function generateTimeSlots(dateInput, bookedTimes) {
         const duration = parseInt(document.getElementById('serviceType').value);
         const timeSelect = document.getElementById('bookingTime');
         const day = new Date(dateInput + "T00:00:00").getDay();
-        timeSelect.innerHTML = '';
-        let open = 10, close = ([1,2,4,5].includes(day)) ? 18 : (day === 6 ? 12 : 0);
-        if (close === 0) { timeSelect.add(new Option("Closed", "")); return; }
         
-        const bookedMinutes = bookedTimes.map(t => {
-            let str = t.toString().toUpperCase();
-            let match = str.match(/(\d+):(\d+)/); 
-            if (!match) return null;
-            let h = parseInt(match[1]), m = parseInt(match[2]);
-            if (str.includes("PM") && h < 12) h += 12;
-            if (str.includes("AM") && h === 12) h = 0;
-            return h * 60 + m;
-        });
-
-        let curr = new Date(dateInput + `T${open}:00:00`), end = new Date(dateInput + `T${close}:00:00`);
-        while (curr < end) {
-            let next = new Date(curr.getTime() + duration * 60000);
-            let currentTotalMin = curr.getHours() * 60 + curr.getMinutes();
-            let displayTime = `${curr.getHours() % 12 || 12}:${curr.getMinutes().toString().padStart(2, '0')} ${curr.getHours() >= 12 ? 'PM' : 'AM'}`;
-            const isLunch = (day !== 6) && (curr.getHours() === 12 || (next > new Date(dateInput + "T12:00:00") && curr < new Date(dateInput + "T13:00:00")));
-            if (!isLunch && next <= end && !bookedMinutes.includes(currentTotalMin)) {
-                timeSelect.add(new Option(displayTime, displayTime));
-            }
-            curr.setMinutes(curr.getMinutes() + 30);
+        timeSelect.innerHTML = '';
+        
+        // 영업시간 설정: 수(3), 일(0) 휴무
+        let open = 10, close = ([1,2,4,5].includes(day)) ? 18 : (day === 6 ? 12 : 0);
+        if (close === 0) { 
+            timeSelect.add(new Option("Closed (Wed, Sun)", "")); 
+            timeSelect.disabled = true;
+            return; 
         }
-        timeSelect.disabled = false;
+        
+        // 예약된 시간 형식을 표준화 (비교용)
+        const normalizedBooked = bookedTimes.map(t => t.toString().trim().toUpperCase());
+
+        let curr = new Date(dateInput + `T${open.toString().padStart(2, '0')}:00:00`);
+        let endLimit = new Date(dateInput + `T${close.toString().padStart(2, '0')}:00:00`);
+
+        let hasAvailable = false;
+        while (curr < endLimit) {
+            let next = new Date(curr.getTime() + duration * 60000);
+            
+            // 시간 표시 형식 생성 (예: 10:00 AM)
+            let hours = curr.getHours();
+            let minutes = curr.getMinutes();
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            let displayHours = hours % 12 || 12;
+            let displayTime = `${displayHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+            
+            // 점심시간 제외 (12:00 PM - 1:00 PM, 토요일 제외)
+            const isLunch = (day !== 6) && (hours === 12 || (next > new Date(dateInput + "T12:00:00") && curr < new Date(dateInput + "T13:00:00")));
+            
+            // 예약 여부 확인
+            const isBooked = normalizedBooked.includes(displayTime);
+
+            if (!isLunch && next <= endLimit) {
+                let opt = new Option(displayTime, displayTime);
+                if (isBooked) {
+                    opt.disabled = true;
+                    opt.text += " (Booked)";
+                    opt.style.color = "#ccc";
+                } else {
+                    hasAvailable = true;
+                }
+                timeSelect.add(opt);
+            }
+            curr.setMinutes(curr.getMinutes() + 30); // 30분 간격으로 생성
+        }
+
+        if (!hasAvailable) {
+            timeSelect.innerHTML = '<option value="">No slots available</option>';
+            timeSelect.disabled = true;
+        } else {
+            timeSelect.disabled = false;
+            // "Please select" 문구를 맨 앞에 추가
+            timeSelect.insertBefore(new Option("Please select a time", ""), timeSelect.firstChild);
+            timeSelect.selectedIndex = 0;
+        }
     }
 
     document.getElementById('bookingForm').onsubmit = async function(e) {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
+        const timeVal = document.getElementById('bookingTime').value;
+        
+        if(!timeVal) {
+            alert("Please select an available time.");
+            return;
+        }
+
         btn.disabled = true;
+        btn.innerText = "Processing...";
+
         const data = {
             name: document.getElementById('custName').value,
             phone: document.getElementById('custPhone').value,
@@ -117,34 +162,8 @@
             vehicle: document.getElementById('vehicleType').value,
             service: document.getElementById('serviceType').options[document.getElementById('serviceType').selectedIndex].text,
             date: document.getElementById('bookingDate').value,
-            time: document.getElementById('bookingTime').value
+            time: timeVal
         };
+
         try {
-            await fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) });
-            await emailjs.send('service_o3jyisj', 'template_v0cbt05', data);
-            alert('Reservation Successful!');
-            location.reload();
-        } catch (err) { alert('Successfully saved!'); location.reload(); }
-    };
-</script>
-</body>
-</html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            await fetch(scriptURL, {
