@@ -117,7 +117,7 @@
                 let timeStr = `${dispH}:${m.toString().padStart(2, '0')} ${ampm}`;
                 let opt = new Option(timeStr, timeStr);
 
-                // 핵심 수정 로직
+                // ✅ 로직 수정: 현재 선택한 서비스(selectedDuration)에 맞춰서만 뒤를 체크
                 const isOccupied = busyPeriods.some(p => (currentStart < p.end && currentStart >= p.start));
                 const isConflict = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
                 const isLunch = (day !== 6 && currentStart < 780 && currentEnd > 720);
@@ -125,9 +125,7 @@
 
                 if (isOccupied) {
                     opt.disabled = true; opt.text += " (Full)"; opt.style.color = "red";
-                } else if (isConflict) {
-                    opt.disabled = true; opt.text += " (Time Short)"; opt.style.color = "orange";
-                } else if (isLunch || isOverClose) {
+                } else if (isConflict || isLunch || isOverClose) {
                     opt.disabled = true; opt.text += " (Time Short)"; opt.style.color = "orange";
                 }
                 timeSelect.add(opt);
