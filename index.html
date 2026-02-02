@@ -22,7 +22,7 @@
 <div class="container">
     <h2>Anycaristeam Booking</h2>
     <div class="notice">
-        • Wed, Sun: Closed | Lunch (12:00-1:00 PM) <br>
+        • Wed, Sun: Closed | Lunch (12:00-1:00 PM)<br>
         • Premium (2 hrs) / Basic (30 mins)
     </div>
     <form id="bookingForm">
@@ -117,13 +117,16 @@
                 let timeStr = `${dispH}:${m.toString().padStart(2, '0')} ${ampm}`;
                 let opt = new Option(timeStr, timeStr);
 
-                // ✅ 로직 수정: 예약된 시간은 무조건 빨간색(Full)
-                const isFull = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
+                // 핵심 수정 로직
+                const isOccupied = busyPeriods.some(p => (currentStart < p.end && currentStart >= p.start));
+                const isConflict = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
                 const isLunch = (day !== 6 && currentStart < 780 && currentEnd > 720);
                 const isOverClose = currentEnd > (closeTime * 60);
 
-                if (isFull) {
+                if (isOccupied) {
                     opt.disabled = true; opt.text += " (Full)"; opt.style.color = "red";
+                } else if (isConflict) {
+                    opt.disabled = true; opt.text += " (Time Short)"; opt.style.color = "orange";
                 } else if (isLunch || isOverClose) {
                     opt.disabled = true; opt.text += " (Time Short)"; opt.style.color = "orange";
                 }
