@@ -31,6 +31,7 @@
             <input type="text" id="custName" placeholder="Full Name" required style="margin-bottom:8px;">
             <input type="tel" id="custPhone" placeholder="Phone Number" required>
         </div>
+
         <div class="section">
             <label>Vehicle Type</label>
             <select id="vehicleType" required>
@@ -39,6 +40,7 @@
                 <option value="Van/SUV 7seats">Van / SUV (7 Seats)</option>
             </select>
         </div>
+
         <div class="section">
             <label>Service Type</label>
             <select id="serviceType" onchange="fetchBookedTimes()" required>
@@ -46,6 +48,7 @@
                 <option value="30">Basic (30 mins)</option>
             </select>
         </div>
+
         <div class="section">
             <label>Booking Date</label>
             <input type="date" id="bookingDate" onchange="fetchBookedTimes()" required>
@@ -107,8 +110,8 @@
 
         for (let h = 10; h < closeTime; h++) {
             for (let m of [0, 30]) {
-                if (day !== 6 && h === 12) continue;
-                if (day === 6 && h === 11 && m === 30) break;
+                if (day !== 6 && h === 12) continue; // 평일 점심시간
+                if (day === 6 && h === 11 && m === 30) break; // 토요일 마감 직전
 
                 const currentStart = h * 60 + m;
                 const currentEnd = currentStart + selectedDuration;
@@ -117,7 +120,7 @@
                 let timeStr = `${dispH}:${m.toString().padStart(2, '0')} ${ampm}`;
                 let opt = new Option(timeStr, timeStr);
 
-                // ✅ 핵심 수정: 현재 선택한 서비스(selectedDuration)에 맞춰서만 뒤를 체크
+                // ✅ 핵심 수정: 예약된 시간은 무조건 빨간색(Full)
                 const isOccupied = busyPeriods.some(p => (currentStart < p.end && currentStart >= p.start));
                 const isConflict = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
                 const isLunch = (day !== 6 && currentStart < 780 && currentEnd > 720);
