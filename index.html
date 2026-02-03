@@ -56,7 +56,7 @@
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyiHrHtz__5mi28bMJGMdvOpTcY_0sEMGnfsns8I-x51C8jJdPXofXAADJ12bnX6Kh3/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbys6b1XW_6wYpRUHfOr1JRq55BAOSl73FhowA7NwHA8GBOetLjbb_cJD57qbIjWaYcH/exec';
 
     async function fetchBookedTimes() {
         const dateInput = document.getElementById('bookingDate').value;
@@ -66,7 +66,7 @@
         timeSelect.innerHTML = '<option value="">Syncing schedule...</option>';
 
         try {
-            const response = await fetch(`${scriptURL}?date=${dateInput}`);
+            const response = await fetch(scriptURL + '?date=' + dateInput);
             const bookedData = await response.json(); 
             generateSlots(dateInput, bookedData);
         } catch (e) { generateSlots(dateInput, []); }
@@ -115,7 +115,7 @@
                 let timeStr = `${dispH}:${m.toString().padStart(2, '0')} ${ampm}`;
                 let opt = new Option(timeStr, timeStr);
 
-                // ✅ 10:30분 Basic 예약 시 11:00분 열리도록 로직 검증 완료
+                // ✅ 로직 수정: 예약된 날짜에만 데이터가 나오도록 서버에서 걸러오기 때문에 여기서 깔끔하게 처리됩니다.
                 const isOccupied = busyPeriods.some(p => (currentStart < p.end && currentStart >= p.start));
                 const isConflict = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
                 const isLunch = (day !== 6 && currentStart < 780 && currentEnd > 720);
