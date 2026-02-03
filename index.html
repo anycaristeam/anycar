@@ -56,7 +56,7 @@
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyzIInIalWkie6POIX9sQXrhcpNBrsPdFeJLKbPFjdcBYzJ04xkf3DrSF9EgjJmsP8b/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyiHrHtz__5mi28bMJGMdvOpTcY_0sEMGnfsns8I-x51C8jJdPXofXAADJ12bnX6Kh3/exec';
 
     async function fetchBookedTimes() {
         const dateInput = document.getElementById('bookingDate').value;
@@ -73,8 +73,11 @@
     }
 
     function timeToMin(tStr) {
-        let [time, ampm] = tStr.trim().toUpperCase().split(' ');
-        let [h, m] = time.split(':').map(Number);
+        let parts = tStr.trim().toUpperCase().split(' ');
+        let timeParts = parts[0].split(':');
+        let h = parseInt(timeParts[0]);
+        let m = parseInt(timeParts[1]);
+        let ampm = parts[1];
         if (ampm === 'PM' && h !== 12) h += 12;
         if (ampm === 'AM' && h === 12) h = 0;
         return h * 60 + m;
@@ -102,7 +105,7 @@
 
         for (let h = 10; h < closeTime; h++) {
             for (let m of [0, 30]) {
-                if (day !== 6 && h === 12) continue; // Lunch
+                if (day !== 6 && h === 12) continue;
                 if (day === 6 && h === 11 && m === 30) break;
 
                 const currentStart = h * 60 + m;
@@ -112,7 +115,7 @@
                 let timeStr = `${dispH}:${m.toString().padStart(2, '0')} ${ampm}`;
                 let opt = new Option(timeStr, timeStr);
 
-                // ✅ 10:30분 Basic 예약 시 11:00분 열리도록 로직 정교화
+                // ✅ 10:30분 Basic 예약 시 11:00분 열리도록 로직 검증 완료
                 const isOccupied = busyPeriods.some(p => (currentStart < p.end && currentStart >= p.start));
                 const isConflict = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
                 const isLunch = (day !== 6 && currentStart < 780 && currentEnd > 720);
