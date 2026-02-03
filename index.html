@@ -56,7 +56,7 @@
         </div>
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
-    <a href="https://maps.google.com/?q=25+Harlech+Ct,+Thornhill,+ON+L3T+6L5" target="_blank" class="map-btn">📍 Our Location (25 Harlech Ct)</a>
+    <a href="https://www.google.com/maps/search/?api=1&query=25+Harlech+Ct,+Thornhill,+ON+L3T+6L5" target="_blank" class="map-btn">📍 Our Location (25 Harlech Ct)</a>
 </div>
 
 <script>
@@ -88,7 +88,6 @@
     function generateSlots(dateInput, bookedData) {
         const timeSelect = document.getElementById('bookingTime');
         const selectedDuration = parseInt(document.getElementById('serviceType').value);
-        // 날짜 객체 생성 시 타임존 에러 방지
         const dateParts = dateInput.split('-');
         const day = new Date(dateParts[0], dateParts[1]-1, dateParts[2]).getDay();
         
@@ -118,7 +117,7 @@
                 let timeStr = `${dispH}:${m.toString().padStart(2, '0')} ${ampm}`;
                 let opt = new Option(timeStr, timeStr);
 
-                // ✅ 로직 수정: 예약된 '구간'만 정확히 피하도록 수정
+                // ✅ 날짜 필터링 오류 해결 및 중복 예약 구간만 정확히 피하도록 수정
                 const isOccupied = busyPeriods.some(p => (currentStart < p.end && currentStart >= p.start));
                 const isConflict = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
                 const isLunch = (day !== 6 && currentStart < 780 && currentEnd > 720);
