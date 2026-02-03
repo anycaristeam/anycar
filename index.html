@@ -28,29 +28,25 @@
     <form id="bookingForm">
         <div class="section">
             <label>Customer Info</label>
-            <input type="text" id="custName" placeholder="Full Name" required style="margin-bottom:8px;">
-            <input type="tel" id="custPhone" placeholder="Phone Number" required>
+            <input type="text" id="custName" placeholder="Full Name" required>
+            <input type="tel" id="custPhone" placeholder="Phone Number" required style="margin-top:8px;">
         </div>
         <div class="section">
-            <label>Vehicle Type</label>
+            <label>Vehicle & Service</label>
             <select id="vehicleType" required>
                 <option value="Sedan">Sedan</option>
                 <option value="SUV 5seats">SUV (5 Seats)</option>
                 <option value="Van/SUV 7seats">Van / SUV (7 Seats)</option>
             </select>
-        </div>
-        <div class="section">
-            <label>Service Type</label>
-            <select id="serviceType" onchange="fetchBookedTimes()" required>
+            <select id="serviceType" onchange="fetchBookedTimes()" required style="margin-top:8px;">
                 <option value="120">Premium Full Steam (2 hrs)</option>
                 <option value="30">Basic (30 mins)</option>
             </select>
         </div>
         <div class="section">
-            <label>Booking Date</label>
+            <label>Booking Date & Time</label>
             <input type="date" id="bookingDate" onchange="fetchBookedTimes()" required>
-            <label style="margin-top:10px;">Available Time</label>
-            <select id="bookingTime" required disabled>
+            <select id="bookingTime" required disabled style="margin-top:8px;">
                 <option value="">Select a date first</option>
             </select>
         </div>
@@ -60,14 +56,14 @@
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzmbRiJ0zmFk7vAXRUzf22-KhKcl8JDCqIVpNvwsWVzGlABT1uySfsdLhPYdMvXVbIR/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyzIInIalWkie6POIX9sQXrhcpNBrsPdFeJLKbPFjdcBYzJ04xkf3DrSF9EgjJmsP8b/exec';
 
     async function fetchBookedTimes() {
         const dateInput = document.getElementById('bookingDate').value;
         const timeSelect = document.getElementById('bookingTime');
         if (!dateInput) return;
         timeSelect.disabled = true;
-        timeSelect.innerHTML = '<option value="">Checking schedule...</option>';
+        timeSelect.innerHTML = '<option value="">Syncing schedule...</option>';
 
         try {
             const response = await fetch(`${scriptURL}?date=${dateInput}`);
@@ -77,8 +73,7 @@
     }
 
     function timeToMin(tStr) {
-        let cleanStr = tStr.trim().toUpperCase();
-        let [time, ampm] = cleanStr.split(' ');
+        let [time, ampm] = tStr.trim().toUpperCase().split(' ');
         let [h, m] = time.split(':').map(Number);
         if (ampm === 'PM' && h !== 12) h += 12;
         if (ampm === 'AM' && h === 12) h = 0;
@@ -103,11 +98,11 @@
             return { start: start, end: start + dur };
         });
 
-        const closeHour = (day === 6) ? 12 : 18;
+        const closeTime = (day === 6) ? 12 : 18;
 
-        for (let h = 10; h < closeHour; h++) {
+        for (let h = 10; h < closeTime; h++) {
             for (let m of [0, 30]) {
-                if (day !== 6 && h === 12) continue;
+                if (day !== 6 && h === 12) continue; // Lunch
                 if (day === 6 && h === 11 && m === 30) break;
 
                 const currentStart = h * 60 + m;
@@ -117,11 +112,11 @@
                 let timeStr = `${dispH}:${m.toString().padStart(2, '0')} ${ampm}`;
                 let opt = new Option(timeStr, timeStr);
 
-                // ✅ 로직 수정: 예약된 날짜의 예약 구간만 정확히 피하도록 수정
+                // ✅ 10:30분 Basic 예약 시 11:00분 열리도록 로직 정교화
                 const isOccupied = busyPeriods.some(p => (currentStart < p.end && currentStart >= p.start));
                 const isConflict = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
                 const isLunch = (day !== 6 && currentStart < 780 && currentEnd > 720);
-                const isOverClose = currentEnd > (closeHour * 60);
+                const isOverClose = currentEnd > (closeTime * 60);
 
                 if (isOccupied) {
                     opt.disabled = true; opt.text += " (Full)"; opt.style.color = "red";
