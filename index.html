@@ -31,7 +31,6 @@
             <input type="text" id="custName" placeholder="Full Name" required style="margin-bottom:8px;">
             <input type="tel" id="custPhone" placeholder="Phone Number" required>
         </div>
-
         <div class="section">
             <label>Vehicle Type</label>
             <select id="vehicleType" required>
@@ -40,7 +39,6 @@
                 <option value="Van/SUV 7seats">Van / SUV (7 Seats)</option>
             </select>
         </div>
-
         <div class="section">
             <label>Service Type</label>
             <select id="serviceType" onchange="fetchBookedTimes()" required>
@@ -48,7 +46,6 @@
                 <option value="30">Basic (30 mins)</option>
             </select>
         </div>
-
         <div class="section">
             <label>Booking Date</label>
             <input type="date" id="bookingDate" onchange="fetchBookedTimes()" required>
@@ -59,7 +56,6 @@
         </div>
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
-    
     <a href="https://www.google.com/maps/search/?api=1&query=25+Harlech+Ct,+Thornhill,+ON+L3T+6L5" target="_blank" class="map-btn">📍 Our Location (25 Harlech Ct)</a>
 </div>
 
@@ -102,6 +98,7 @@
         const busyPeriods = bookedData.map(entry => {
             const parts = entry.split('|');
             const start = timeToMin(parts[0]);
+            // 시트의 서비스 명칭을 보고 30분 또는 120분 점유 설정
             const dur = (parts[1] && parts[1].toLowerCase().includes("premium")) ? 120 : 30;
             return { start: start, end: start + dur };
         });
@@ -110,8 +107,8 @@
 
         for (let h = 10; h < closeTime; h++) {
             for (let m of [0, 30]) {
-                if (day !== 6 && h === 12) continue; // 평일 점심시간
-                if (day === 6 && h === 11 && m === 30) break; // 토요일 마감 직전
+                if (day !== 6 && h === 12) continue; // 평일 점심시간 제외
+                if (day === 6 && h === 11 && m === 30) break; // 토요일 마감시간
 
                 const currentStart = h * 60 + m;
                 const currentEnd = currentStart + selectedDuration;
@@ -120,15 +117,19 @@
                 let timeStr = `${dispH}:${m.toString().padStart(2, '0')} ${ampm}`;
                 let opt = new Option(timeStr, timeStr);
 
-                // ✅ 핵심 수정: 예약된 시간은 무조건 빨간색(Full)
+                // 핵심 수정: 현재 슬롯이 이미 예약된 시간(busyPeriods) 안에 들어가는지 확인
                 const isOccupied = busyPeriods.some(p => (currentStart < p.end && currentStart >= p.start));
+                
+                // 핵심 수정: 현재 고객이 선택한 서비스 시간이 기존 예약과 겹치는지 확인
                 const isConflict = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
+                
                 const isLunch = (day !== 6 && currentStart < 780 && currentEnd > 720);
                 const isOverClose = currentEnd > (closeTime * 60);
 
                 if (isOccupied) {
                     opt.disabled = true; opt.text += " (Full)"; opt.style.color = "red";
                 } else if (isConflict || isLunch || isOverClose) {
+                    // 선택한 서비스(예: 2시간)를 하기엔 뒷시간이 부족할 때만 주황색으로 표시
                     opt.disabled = true; opt.text += " (Time Short)"; opt.style.color = "orange";
                 }
                 timeSelect.add(opt);
