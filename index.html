@@ -56,7 +56,7 @@
         </div>
         <button type="submit" id="submitBtn">Complete Booking</button>
     </form>
-    <a href="https://www.google.com/maps/search/?api=1&query=25+Harlech+Ct,+Thornhill,+ON+L3T+6L5" target="_blank" class="map-btn">📍 Our Location (25 Harlech Ct)</a>
+    <a href="https://maps.google.com/?q=25+Harlech+Ct,+Thornhill,+ON+L3T+6L5" target="_blank" class="map-btn">📍 Our Location (25 Harlech Ct)</a>
 </div>
 
 <script>
@@ -88,9 +88,11 @@
     function generateSlots(dateInput, bookedData) {
         const timeSelect = document.getElementById('bookingTime');
         const selectedDuration = parseInt(document.getElementById('serviceType').value);
-        const day = new Date(dateInput.replace(/-/g, '/')).getDay();
+        // 날짜 객체 생성 시 타임존 에러 방지
+        const dateParts = dateInput.split('-');
+        const day = new Date(dateParts[0], dateParts[1]-1, dateParts[2]).getDay();
+        
         timeSelect.innerHTML = '';
-
         if (day === 0 || day === 3) {
             timeSelect.add(new Option("Closed (Wed, Sun)", "")); return;
         }
@@ -98,17 +100,16 @@
         const busyPeriods = bookedData.map(entry => {
             const parts = entry.split('|');
             const start = timeToMin(parts[0]);
-            // 시트의 서비스 명칭을 보고 30분 또는 120분 점유 설정
             const dur = (parts[1] && parts[1].toLowerCase().includes("premium")) ? 120 : 30;
             return { start: start, end: start + dur };
         });
 
-        const closeTime = (day === 6) ? 12 : 18;
+        const closeHour = (day === 6) ? 12 : 18;
 
-        for (let h = 10; h < closeTime; h++) {
+        for (let h = 10; h < closeHour; h++) {
             for (let m of [0, 30]) {
-                if (day !== 6 && h === 12) continue; // 평일 점심시간 제외
-                if (day === 6 && h === 11 && m === 30) break; // 토요일 마감시간
+                if (day !== 6 && h === 12) continue;
+                if (day === 6 && h === 11 && m === 30) break;
 
                 const currentStart = h * 60 + m;
                 const currentEnd = currentStart + selectedDuration;
@@ -117,19 +118,15 @@
                 let timeStr = `${dispH}:${m.toString().padStart(2, '0')} ${ampm}`;
                 let opt = new Option(timeStr, timeStr);
 
-                // 핵심 수정: 현재 슬롯이 이미 예약된 시간(busyPeriods) 안에 들어가는지 확인
+                // ✅ 로직 수정: 예약된 '구간'만 정확히 피하도록 수정
                 const isOccupied = busyPeriods.some(p => (currentStart < p.end && currentStart >= p.start));
-                
-                // 핵심 수정: 현재 고객이 선택한 서비스 시간이 기존 예약과 겹치는지 확인
                 const isConflict = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
-                
                 const isLunch = (day !== 6 && currentStart < 780 && currentEnd > 720);
-                const isOverClose = currentEnd > (closeTime * 60);
+                const isOverClose = currentEnd > (closeHour * 60);
 
                 if (isOccupied) {
                     opt.disabled = true; opt.text += " (Full)"; opt.style.color = "red";
                 } else if (isConflict || isLunch || isOverClose) {
-                    // 선택한 서비스(예: 2시간)를 하기엔 뒷시간이 부족할 때만 주황색으로 표시
                     opt.disabled = true; opt.text += " (Time Short)"; opt.style.color = "orange";
                 }
                 timeSelect.add(opt);
