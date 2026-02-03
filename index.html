@@ -60,7 +60,7 @@
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyxe_UwFcJ3h_QDr--_drsKPV5yzAiwcBuMB1OymNWm7_P8lZYUj_AqoK234fys8gpR/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbya7XhUYXGHlOkQiTcs93xf7xWqFJQYptU0SIBzI1NzEYTqgw5Lh7K2agG_o5pF7gtH/exec';
 
     async function fetchBookedTimes() {
         const dateInput = document.getElementById('bookingDate').value;
@@ -117,7 +117,7 @@
                 let timeStr = `${dispH}:${m.toString().padStart(2, '0')} ${ampm}`;
                 let opt = new Option(timeStr, timeStr);
 
-                // ✅ 날짜 필터링 오류 해결 및 중복 예약 구간만 정확히 피하도록 수정
+                // ✅ 로직 수정: 예약된 '구간'만 정확히 피하고, Basic(30분)은 뒷시간에 영향 안 줌
                 const isOccupied = busyPeriods.some(p => (currentStart < p.end && currentStart >= p.start));
                 const isConflict = busyPeriods.some(p => (currentStart < p.end && currentEnd > p.start));
                 const isLunch = (day !== 6 && currentStart < 780 && currentEnd > 720);
