@@ -199,8 +199,14 @@ function generateSlots(date, bookedData) {
       const start = h * 60 + m;
       const end = start + duration;
 
-      const overlap = busy.some(b => start < b.end && end > b.start);
-      const hitsLunch = start < 780 && end > 720;
+      const overlap = busy.some(b => {
+  return start < b.end && end > b.start;
+});
+
+      const lunchStart = 12 * 60; // 720
+const lunchEnd = 13 * 60;   // 780
+const hitsLunch = start < lunchEnd && end > lunchStart;
+
 
       const label =
         `${h % 12 || 12}:${m === 0 ? '00' : '30'} ${h >= 12 ? 'PM' : 'AM'}`;
@@ -253,3 +259,4 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
 </script>
 </body>
 </html>
+
