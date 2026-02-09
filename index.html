@@ -1,125 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anycaristeam Booking</title>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script>emailjs.init("BIDmuBZ6ZVPn--iE8");</script>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 10px; margin: 0; color: #333; }
-        .container { max-width: 450px; background: white; margin: 20px auto; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        h2 { color: #1a73e8; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #e8f0fe; padding-bottom: 10px; }
-        .section { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
-        .notice { background: #fff3cd; color: #856404; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 20px; border: 1px solid #ffeeba; }
-        button { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; }
-        .map-btn { display: block; width: 100%; padding: 15px; background: #34a853; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; text-align: center; margin-top: 15px; box-sizing: border-box; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anycaristeam Booking</title>
+
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f4f7f6;
+  padding: 10px;
+  margin: 0;
+  color: #333;
+}
+.container {
+  max-width: 450px;
+  background: white;
+  margin: 20px auto;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+h2 {
+  color: #1a73e8;
+  text-align: center;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e8f0fe;
+  padding-bottom: 10px;
+}
+.section { margin-bottom: 15px; }
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 14px;
+}
+input, select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 15px;
+}
+.notice {
+  background: #fff3cd;
+  color: #856404;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  border: 1px solid #ffeeba;
+}
+button {
+  width: 100%;
+  padding: 15px;
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.map-btn {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  background: #34a853;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 15px;
+}
+</style>
 </head>
+
 <body>
 <div class="container">
-    <h2>Anycaristeam Booking</h2>
-    <div class="notice">• Lunch (12-1 PM) / Wed, Sun: Closed<br>• Premium (2 hrs) / Basic (30 mins)</div>
-    <form id="bookingForm">
-        <div class="section"><label>Customer Name</label><input type="text" id="custName" required></div>
-        <div class="section"><label>Phone Number</label><input type="tel" id="custPhone" required></div>
-        <div class="section"><label>Service (Duration)</label>
-            <select id="serviceType" onchange="fetchBookedTimes()" required>
-                <option value="120">Premium Full Steam (2 hrs)</option>
-                <option value="30">Basic (30 mins)</option>
-            </select>
-        </div>
-        <div class="section"><label>Date</label><input type="date" id="bookingDate" onchange="fetchBookedTimes()" required></div>
-        <div class="section"><label>Time</label>
-            <select id="bookingTime" required disabled><option value="">Select date first</option></select>
-        </div>
-        <button type="submit" id="submitBtn">Complete Booking</button>
-    </form>
-    <a href="https://maps.google.com/?q=25+Harlech+Ct,+Thornhill,+ON+L3T+6L5" target="_blank" class="map-btn">📍 Our Location (25 Harlech Ct)</a>
+  <h2>Anycaristeam Booking</h2>
+  <div class="notice">
+    • Lunch (12–1 PM)<br>
+    • Wed, Sun: Closed<br>
+    • Premium (2 hrs) / Basic (30 mins)
+  </div>
+
+  <form id="bookingForm">
+    <div class="section">
+      <label>Customer Name</label>
+      <input type="text" id="custName" required>
+    </div>
+
+    <div class="section">
+      <label>Phone Number</label>
+      <input type="tel" id="custPhone" required>
+    </div>
+
+    <div class="section">
+      <label>Service</label>
+      <select id="serviceType" required>
+        <option value="120">Premium Full Steam (2 hrs)</option>
+        <option value="30">Basic (30 mins)</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <label>Date</label>
+      <input type="date" id="bookingDate" required>
+    </div>
+
+    <div class="section">
+      <label>Time</label>
+      <select id="bookingTime" disabled required>
+        <option>Select date first</option>
+      </select>
+    </div>
+
+    <button type="submit">Complete Booking</button>
+  </form>
+
+  <a class="map-btn"
+     href="https://maps.google.com/?q=25+Harlech+Ct,+Thornhill,+ON+L3T+6L5"
+     target="_blank">
+     📍 Our Location (25 Harlech Ct)
+  </a>
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzoYHcao_SYBCB7TGG3VcmZZH4QTNJrBOsMmNk3umPLJ3sdD3NL4FBMyy6x_S4dSFpY/exec';
+const scriptURL =
+'https://script.google.com/macros/s/AKfycbzPT9E7lYAWN25W4XNLsEu8QfAqVfm4Rg3HhjTf3iIidwmI1jIG4Qo0hFEFp_51iKem/exec';
 
-    async function fetchBookedTimes() {
-        const dateVal = document.getElementById('bookingDate').value;
-        const timeSelect = document.getElementById('bookingTime');
-        if (!dateVal) return;
-        timeSelect.disabled = true; timeSelect.innerHTML = '<option>Syncing...</option>';
+document.getElementById('bookingDate').addEventListener('change', fetchBookedTimes);
+document.getElementById('serviceType').addEventListener('change', fetchBookedTimes);
 
-        try {
-            const res = await fetch(`${scriptURL}?date=${dateVal}`);
-            const booked = await res.json();
-            generateSlots(dateVal, booked);
-        } catch (e) { generateSlots(dateVal, []); }
+function toMinutes(timeStr) {
+  let [time, ap] = timeStr.split(' ');
+  let [h, m] = time.split(':').map(Number);
+  if (ap === 'PM' && h !== 12) h += 12;
+  if (ap === 'AM' && h === 12) h = 0;
+  return h * 60 + m;
+}
+
+async function fetchBookedTimes() {
+  const date = bookingDate.value;
+  if (!date) return;
+
+  bookingTime.innerHTML = '<option>Loading...</option>';
+  bookingTime.disabled = true;
+
+  let booked = [];
+  try {
+    const res = await fetch(`${scriptURL}?date=${date}`);
+    booked = await res.json();
+  } catch {}
+
+  generateSlots(date, booked);
+}
+
+function generateSlots(date, bookedData) {
+  bookingTime.innerHTML = '';
+
+  const day = new Date(date + 'T00:00').getDay();
+  if (day === 0 || day === 3) {
+    bookingTime.add(new Option('Closed (Wed, Sun)', ''));
+    return;
+  }
+
+  const duration = Number(serviceType.value);
+  const busy = bookedData.map(b => {
+    const [t, s] = b.split('|');
+    const start = toMinutes(t);
+    const d = s.toLowerCase().includes('premium') ? 120 : 30;
+    return { start, end: start + d };
+  });
+
+  for (let h = 10; h < 18; h++) {
+    for (let m of [0, 30]) {
+
+      if (h === 12) continue; // lunch
+
+      const start = h * 60 + m;
+      const end = start + duration;
+
+      const overlap = busy.some(b => start < b.end && end > b.start);
+      const label = `${h % 12 || 12}:${m === 0 ? '00' : '30'} ${h >= 12 ? 'PM' : 'AM'}`;
+
+      const opt = new Option(label, label);
+      if (overlap) {
+        opt.disabled = true;
+        opt.text += ' (Full)';
+      }
+
+      bookingTime.add(opt);
     }
+  }
 
-    function toMin(tStr) {
-        let [time, ampm] = tStr.trim().toUpperCase().split(' ');
-        let [h, m] = time.split(':').map(Number);
-        if (ampm === 'PM' && h !== 12) h += 12;
-        if (ampm === 'AM' && h === 12) h = 0;
-        return h * 60 + m;
-    }
+  bookingTime.insertBefore(new Option('Please select time', ''), bookingTime.firstChild);
+  bookingTime.selectedIndex = 0;
+  bookingTime.disabled = false;
+}
 
-    function generateSlots(dateVal, bookedData) {
-        const timeSelect = document.getElementById('bookingTime');
-        const duration = parseInt(document.getElementById('serviceType').value);
-        const day = new Date(dateVal.replace(/-/g, '/')).getDay();
-        timeSelect.innerHTML = '';
+document.getElementById('bookingForm').addEventListener('submit', async e => {
+  e.preventDefault();
 
-        if (day === 0 || day === 3) { timeSelect.add(new Option("Closed (Wed, Sun)", "")); return; }
+  const payload = {
+    name: custName.value,
+    phone: custPhone.value,
+    service: serviceType.options[serviceType.selectedIndex].text,
+    date: bookingDate.value,
+    time: bookingTime.value
+  };
 
-        const busy = bookedData.map(b => {
-            const [t, s] = b.split('|');
-            const start = toMin(t);
-            const d = s.toLowerCase().includes("premium") ? 120 : 30;
-            return { start, end: start + d };
-        });
+  await fetch(scriptURL, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
 
-        const endHour = (day === 6) ? 12 : 18;
-        for (let h = 10; h < endHour; h++) {
-            for (let m of [0, 30]) {
-                if (day !== 6 && h === 12) continue; // Lunch
-                if (day === 6 && h === 11 && m === 30) break;
-
-                const nowS = h * 60 + m;
-                const nowE = nowS + duration;
-                const timeStr = `${h % 12 || 12}:${m === 0 ? '00' : '30'} ${h >= 12 ? 'PM' : 'AM'}`;
-                let opt = new Option(timeStr, timeStr);
-
-                // ✅ 10:30분 Basic(30분) 예약 시 11:00분은 열어주는 핵심 로직
-                const isFull = busy.some(p => (nowS < p.end && nowS >= p.start));
-                const isShort = busy.some(p => (nowS < p.end && nowE > p.start)) || nowE > (endHour * 60) || (day !== 6 && nowS < 780 && nowE > 720);
-
-                if (isFull) { opt.disabled = true; opt.text += " (Full)"; opt.style.color = "red"; }
-                else if (isShort) { opt.disabled = true; opt.text += " (Time Short)"; opt.style.color = "orange"; }
-                
-                timeSelect.add(opt);
-            }
-        }
-        timeSelect.disabled = false;
-        timeSelect.insertBefore(new Option("Please select time", ""), timeSelect.firstChild);
-        timeSelect.selectedIndex = 0;
-    }
-
-    document.getElementById('bookingForm').onsubmit = async function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('submitBtn'); btn.disabled = true;
-        const data = {
-            name: document.getElementById('custName').value,
-            phone: document.getElementById('custPhone').value,
-            service: document.getElementById('serviceType').options[document.getElementById('serviceType').selectedIndex].text,
-            date: document.getElementById('bookingDate').value,
-            time: document.getElementById('bookingTime').value
-        };
-        try {
-            await fetch(scriptURL, { method: 'POST', body: JSON.stringify(data) });
-            alert('Reservation Successful!'); location.reload();
-        } catch (err) { alert('Reservation Successful!'); location.reload(); }
-    };
+  alert('Reservation Successful!');
+  location.reload();
+});
 </script>
 </body>
 </html>
