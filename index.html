@@ -15,12 +15,15 @@ button{background:#1a73e8;color:#fff;border:none}
 <h2>Anycaristeam Booking</h2>
 
 <select id="service">
-  <option value="30">Basic (30 mins)</option>
-  <option value="120">Premium (2 hrs)</option>
+  <option value="">Select service</option>
+  <option value="Basic (30 mins)">Basic (30 mins)</option>
+  <option value="Premium (2 hrs)">Premium (2 hrs)</option>
 </select>
 
 <input type="date" id="date">
-<select id="time"></select>
+<select id="time">
+  <option value="">Select time</option>
+</select>
 
 <input id="name" placeholder="Name">
 <input id="phone" placeholder="Phone">
@@ -35,57 +38,97 @@ button{background:#1a73e8;color:#fff;border:none}
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbyxb_gdwrv_e7YWG9MHLAOJnf_YwSLC3IPUYLEGNSiB6TdRD2qSGVeQn8McYo_ZMbUK/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzaLpgD3Yc3EiiBALLtrLFbe4UWjwj9O7-GJcRtKLXMwHw7SKM0Y2aiCL288SPh_zOX/exec";
+
+const serviceSel = document.getElementById("service");
+const dateSel = document.getElementById("date");
 const timeSel = document.getElementById("time");
-document.getElementById("date").onchange = loadTimes;
-document.getElementById("service").onchange = loadTimes;
+
+serviceSel.onchange = loadTimes;
+dateSel.onchange = loadTimes;
+
+function minutes(h,m){return h*60+m;}
 
 async function loadTimes(){
   timeSel.innerHTML="";
-  const date = document.getElementById("date").value;
-  if(!date) return;
+  const date = dateSel.value;
+  const service = serviceSel.value;
 
-  const res = await fetch(`${API_URL}?date=${date}`);
+  if(!date || !service){
+    timeSel.appendChild(new Option("Select date & service",""));
+    return;
+  }
+
+  const res = await fetch(`${API_URL}?date=${date}&service=${encodeURIComponent(service)}`);
   const data = await res.json();
 
   if(data.closed){
-    const opt=new Option("Closed",""); opt.disabled=true;
-    timeSel.appendChild(opt); return;
+    const opt=new Option("Closed",""); 
+    opt.disabled=true;
+    timeSel.appendChild(opt);
+    return;
   }
 
-  const dur = Number(document.getElementById("service").value);
+  timeSel.appendChild(new Option("Select time",""));
+
+  const duration = service.includes("Premium") ? 120 : 30;
+  const busy = data.busy || [];
+
   const day = new Date(date+"T00:00").getDay();
-
   let startMin, endLimit;
-  if(day===6){ startMin=540; endLimit=780; }      // Sat
-  else { startMin=600; endLimit=1020; }           // Weekday
 
-  for(let m=startMin; m+dur<=endLimit; m+=30){
-    if(day!==6 && m<780 && m+dur>720) continue;   // lunch
-    const clash = data.busy.some(b=>m<b.end && m+dur>b.start);
-    const label=toStr(m);
-    const opt=new Option(label,label);
+  if(day===6){          // Saturday
+    startMin=540;       // 9:00
+    endLimit=780;       // 13:00
+  } else {
+    startMin=600;       // 10:00
+    endLimit=1020;      // 17:00
+  }
+
+  for(let m=startMin; m+duration<=endLimit; m+=30){
+    // 점심시간 12–1
+    if(day!==6 && m<780 && m+duration>720) continue;
+
+    const clash = busy.some(b => m < b.end && m+duration > b.start);
+
+    const label = toStr(m);
+    const opt = new Option(label,label);
     if(clash) opt.disabled=true;
+
     timeSel.appendChild(opt);
   }
 }
 
 async function book(){
+  if(!timeSel.value){
+    alert("시간을 선택하세요");
+    return;
+  }
+
   const payload={
-    name:name.value, phone:phone.value, email:email.value,
+    name:name.value,
+    phone:phone.value,
+    email:email.value,
     vehicle:vehicle.value,
-    service:service.options[service.selectedIndex].text,
-    date:date.value, time:time.value
+    service:serviceSel.value,
+    date:dateSel.value,
+    time:timeSel.value
   };
-  const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(payload)});
+
+  const r=await fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify(payload)
+  });
+
   const t=await r.text();
   if(t==="OK") alert("예약 완료");
-  else alert("예약 불가");
+  else alert("예약 실패");
 }
 
 function toStr(m){
   let h=Math.floor(m/60),min=m%60,ap=h>=12?"PM":"AM";
-  if(h>12) h-=12;
+  if(h===0) h=12;
+  else if(h>12) h-=12;
   return `${h}:${min===0?"00":"30"} ${ap}`;
 }
 </script>
