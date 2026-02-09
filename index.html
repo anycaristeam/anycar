@@ -6,257 +6,156 @@
 <title>Anycaristeam Booking</title>
 
 <style>
-body {
-  font-family: 'Segoe UI', sans-serif;
-  background: #f4f7f6;
-  padding: 10px;
-  margin: 0;
-  color: #333;
-}
-.container {
-  max-width: 450px;
-  background: white;
-  margin: 20px auto;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-}
-h2 {
-  color: #1a73e8;
-  text-align: center;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #e8f0fe;
-  padding-bottom: 10px;
-}
-.section { margin-bottom: 15px; }
-label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-  font-size: 14px;
-}
-input, select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 15px;
-}
-.notice {
-  background: #fff3cd;
-  color: #856404;
-  padding: 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  margin-bottom: 20px;
-  border: 1px solid #ffeeba;
-}
-button {
-  width: 100%;
-  padding: 15px;
-  background: #1a73e8;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
-  cursor: pointer;
-  font-weight: bold;
-}
-.map-btn {
-  display: block;
-  width: 100%;
-  padding: 15px;
-  background: #34a853;
-  color: white;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: bold;
-  text-align: center;
-  margin-top: 15px;
-}
+body { font-family: Segoe UI, sans-serif; background:#f4f7f6; margin:0; padding:10px; }
+.container { max-width:450px; margin:20px auto; background:#fff; padding:25px; border-radius:12px; }
+h2 { text-align:center; color:#1a73e8; }
+.section { margin-bottom:15px; }
+label { font-weight:bold; font-size:14px; }
+input, select { width:100%; padding:12px; margin-top:5px; }
+button { width:100%; padding:15px; background:#1a73e8; color:#fff; border:none; font-size:16px; }
+.notice { background:#fff3cd; padding:10px; margin-bottom:15px; font-size:13px; }
 </style>
 </head>
 
 <body>
 <div class="container">
-  <h2>Anycaristeam Booking</h2>
+<h2>Anycaristeam Booking</h2>
 
-  <div class="notice">
-    • Lunch: 12:00 – 1:00 PM<br>
-    • Closed: Wednesday & Sunday<br>
-    • Premium: 2 hrs / Basic: 30 mins
-  </div>
+<div class="notice">
+• Lunch: 12–1 PM<br>
+• Closed: Wed & Sun<br>
+• Premium 2hrs / Basic 30mins
+</div>
 
-  <form id="bookingForm">
-    <div class="section">
-      <label>Customer Name</label>
-      <input type="text" id="custName" required>
-    </div>
+<form id="bookingForm">
+<div class="section">
+<label>Name</label>
+<input id="custName" required>
+</div>
 
-    <div class="section">
-      <label>Phone Number</label>
-      <input type="tel" id="custPhone" required>
-    </div>
+<div class="section">
+<label>Phone</label>
+<input id="custPhone" required>
+</div>
 
-    <div class="section">
-      <label>Vehicle Type</label>
-      <select id="vehicle" required>
-        <option value="">Select vehicle type</option>
-        <option value="Sedan">Sedan</option>
-        <option value="SUV 5 seats">SUV 5 seats</option>
-        <option value="Van / SUV 7 seats">Van / SUV 7 seats</option>
-      </select>
-    </div>
+<div class="section">
+<label>Vehicle</label>
+<select id="vehicle" required>
+<option value="">Select</option>
+<option>Sedan</option>
+<option>SUV 5 seats</option>
+<option>Van / SUV 7 seats</option>
+</select>
+</div>
 
-    <div class="section">
-      <label>Service</label>
-      <select id="serviceType" required>
-        <option value="30">Basic (30 mins)</option>
-        <option value="120">Premium Full Steam (2 hrs)</option>
-      </select>
-    </div>
+<div class="section">
+<label>Service</label>
+<select id="serviceType" required>
+<option value="30">Basic (30 mins)</option>
+<option value="120">Premium Full Steam (2 hrs)</option>
+</select>
+</div>
 
-    <div class="section">
-      <label>Date</label>
-      <input type="date" id="bookingDate" required>
-    </div>
+<div class="section">
+<label>Date</label>
+<input type="date" id="bookingDate" required>
+</div>
 
-    <div class="section">
-      <label>Time</label>
-      <select id="bookingTime" disabled required>
-        <option>Select date first</option>
-      </select>
-    </div>
+<div class="section">
+<label>Time</label>
+<select id="bookingTime" required disabled>
+<option>Select date first</option>
+</select>
+</div>
 
-    <button type="submit">Complete Booking</button>
-  </form>
-
-  <a class="map-btn"
-     href="https://maps.google.com/?q=25+Harlech+Ct,+Thornhill,+ON+L3T+6L5"
-     target="_blank">
-     📍 Our Location (25 Harlech Ct)
-  </a>
+<button type="submit">Complete Booking</button>
+</form>
 </div>
 
 <script>
-const scriptURL =
-'https://script.google.com/macros/s/AKfycbx3hg_13KxSe7wldF4PB5KZYJKNCmQMP29Jk6EcsSoXq4lmZJ3rNTtFG0nJcqo32mO3/exec';
+const scriptURL = "https://script.google.com/macros/s/AKfycbyUmqiSbcgtiw7m1q0A75UVIKELvvJOQz673Qzc_4-VZ0LzP9J2mGqHBZ8qRO5PBr6R/exec";
 
-const bookingDate = document.getElementById('bookingDate');
-const bookingTime = document.getElementById('bookingTime');
-const serviceType = document.getElementById('serviceType');
+const bookingDate = document.getElementById("bookingDate");
+const bookingTime = document.getElementById("bookingTime");
+const serviceType = document.getElementById("serviceType");
 
-bookingDate.addEventListener('change', loadTimes);
-serviceType.addEventListener('change', loadTimes);
+bookingDate.onchange = loadTimes;
+serviceType.onchange = loadTimes;
 
-function toMinutes(timeStr) {
-  let [time, ap] = timeStr.split(' ');
-  let [h, m] = time.split(':').map(Number);
-  if (ap === 'PM' && h !== 12) h += 12;
-  if (ap === 'AM' && h === 12) h = 0;
-  return h * 60 + m;
+function toMin(t){
+  let [time, ap] = t.split(" ");
+  let [h,m] = time.split(":").map(Number);
+  if(ap==="PM" && h!==12) h+=12;
+  if(ap==="AM" && h===12) h=0;
+  return h*60+m;
 }
 
-async function loadTimes() {
+async function loadTimes(){
   const date = bookingDate.value;
-  if (!date) return;
+  if(!date) return;
 
-  bookingTime.innerHTML = '<option>Loading...</option>';
-  bookingTime.disabled = true;
+  bookingTime.innerHTML="<option>Loading...</option>";
+  bookingTime.disabled=true;
 
-  let booked = [];
-  try {
-    const res = await fetch(`${scriptURL}?date=${date}`);
-    booked = await res.json();
-  } catch {}
+  const res = await fetch(`${scriptURL}?date=${date}`);
+  const booked = await res.json();
 
-  generateSlots(date, booked);
-}
-
-function generateSlots(date, bookedData) {
-  bookingTime.innerHTML = '';
-
-  const day = new Date(date + 'T00:00').getDay();
-  if (day === 0 || day === 3) {
-    bookingTime.add(new Option('Closed (Wed, Sun)', ''));
-    return;
-  }
-
-  const duration = Number(serviceType.value);
-
-  const busy = bookedData.map(b => {
-    const [t, s] = b.split('|');
-    const start = toMinutes(t);
-    const d = s.toLowerCase().includes('premium') ? 120 : 30;
-    return { start, end: start + d };
+  const busy = booked.map(b=>{
+    const [t,s]=b.split("|");
+    const start=toMin(t);
+    const dur=s.toLowerCase().includes("premium")?120:30;
+    return {start,end:start+dur};
   });
 
-  for (let h = 10; h < 18; h++) {
-    for (let m of [0, 30]) {
+  bookingTime.innerHTML="";
+  const duration=Number(serviceType.value);
+  const lunchStart=720, lunchEnd=780;
 
-      if (h === 12) continue; // lunch break
+  for(let h=10;h<18;h++){
+    for(let m of [0,30]){
+      if(h===12) continue;
 
-      const start = h * 60 + m;
-      const end = start + duration;
+      const start=h*60+m;
+      const end=start+duration;
 
-      const overlap = busy.some(b => {
-  return start < b.end && end > b.start;
-});
+      const overlap=busy.some(b=>start<b.end && end>b.start);
+      const hitsLunch=start<lunchEnd && end>lunchStart;
 
-      const lunchStart = 12 * 60; // 720
-const lunchEnd = 13 * 60;   // 780
-const hitsLunch = start < lunchEnd && end > lunchStart;
+      const label=`${h%12||12}:${m===0?"00":"30"} ${h>=12?"PM":"AM"}`;
+      const opt=new Option(label,label);
 
-
-      const label =
-        `${h % 12 || 12}:${m === 0 ? '00' : '30'} ${h >= 12 ? 'PM' : 'AM'}`;
-
-      const opt = new Option(label, label);
-
-      if (overlap || hitsLunch || end > 1080) {
-        opt.disabled = true;
-      }
-
+      if(overlap||hitsLunch||end>1080) opt.disabled=true;
       bookingTime.add(opt);
     }
   }
 
-  bookingTime.insertBefore(
-    new Option('Please select time', ''),
-    bookingTime.firstChild
-  );
-  bookingTime.selectedIndex = 0;
-  bookingTime.disabled = false;
+  bookingTime.insertBefore(new Option("Please select time",""),bookingTime.firstChild);
+  bookingTime.disabled=false;
 }
 
-document.getElementById('bookingForm').addEventListener('submit', async e => {
+document.getElementById("bookingForm").onsubmit=async e=>{
   e.preventDefault();
 
-  const payload = {
-    name: custName.value,
-    phone: custPhone.value,
-    vehicle: vehicle.value,
-    service: serviceType.options[serviceType.selectedIndex].text,
-    date: bookingDate.value,
-    time: bookingTime.value
+  const payload={
+    name:custName.value,
+    phone:custPhone.value,
+    vehicle:vehicle.value,
+    service:serviceType.options[serviceType.selectedIndex].text,
+    date:bookingDate.value,
+    time:bookingTime.value
   };
 
-  const res = await fetch(scriptURL, {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  });
+  const res=await fetch(scriptURL,{method:"POST",body:JSON.stringify(payload)});
+  const txt=await res.text();
 
-  const text = await res.text();
-
-  if (text === 'DUPLICATE') {
-    alert('This time is already booked. Please choose another time.');
+  if(txt==="DUPLICATE"){
+    alert("This time is already booked.");
     return;
   }
 
-  alert('Reservation Successful!');
+  alert("Reservation Successful!");
   location.reload();
-});
+};
 </script>
 </body>
 </html>
-
