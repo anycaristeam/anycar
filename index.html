@@ -1,77 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Anycaristeam Booking</title>
 <style>
-body{font-family:Arial;background:#f4f7f6}
+body{font-family:Arial;background:#f4f6f8}
 .box{max-width:420px;margin:30px auto;background:#fff;padding:20px;border-radius:10px}
-button{width:100%;padding:12px;background:#1a73e8;color:#fff;border:none}
+select,input,button{width:100%;padding:10px;margin:6px 0}
+button{background:#1a73e8;color:#fff;border:none}
 </style>
 </head>
 <body>
-
 <div class="box">
 <h2>Anycaristeam Booking</h2>
 
-<input id="name" placeholder="Name"><br><br>
-<input id="phone" placeholder="Phone"><br><br>
-
-<select id="vehicle">
-<option>Sedan</option>
-<option>SUV 5 seats</option>
-<option>Van / SUV 7 seats</option>
-</select><br><br>
-
 <select id="service">
-<option>Basic (30 mins)</option>
-<option>Premium Full Steam (2 hrs)</option>
-</select><br><br>
+  <option value="30">Basic (30 mins)</option>
+  <option value="120">Premium (2 hrs)</option>
+</select>
 
-<input type="date" id="date"><br><br>
+<input type="date" id="date">
+<select id="time"></select>
 
-<select id="time">
-<option>10:00 AM</option>
-<option>10:30 AM</option>
-<option>11:00 AM</option>
-<option>11:30 AM</option>
-<option>1:00 PM</option>
-<option>1:30 PM</option>
-<option>2:00 PM</option>
-<option>2:30 PM</option>
-<option>3:00 PM</option>
-<option>3:30 PM</option>
-<option>4:00 PM</option>
-<option>4:30 PM</option>
-<option>5:00 PM</option>
-<option>5:30 PM</option>
-</select><br><br>
+<input id="name" placeholder="Name">
+<input id="phone" placeholder="Phone">
+<input id="email" placeholder="Email">
+<select id="vehicle">
+  <option>Sedan</option>
+  <option>SUV 5 seats</option>
+  <option>Van / SUV 7 seats</option>
+</select>
 
-<button onclick="book()">Book</button>
+<button onclick="book()">Complete Booking</button>
 </div>
 
 <script>
-const URL = "https://script.google.com/macros/s/AKfycby63OaG3RdsrxIXysF7B0i3OuMUW4Oe-eMvzfIBnxsAyPnTzZ-Rms9E21VERui7OAHW/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwvP8NQllxq1JGS34WQDkrC6bOEaTIl4i8SaKEr_AAbPv_reTKEYIUoPcFD7s6AYzgM/exec";
+const timeSel = document.getElementById("time");
+document.getElementById("date").onchange = loadTimes;
+document.getElementById("service").onchange = loadTimes;
+
+async function loadTimes(){
+  timeSel.innerHTML="";
+  const date = document.getElementById("date").value;
+  if(!date) return;
+
+  const res = await fetch(`${API_URL}?date=${date}`);
+  const data = await res.json();
+
+  if(data.closed){
+    const opt=new Option("Closed",""); opt.disabled=true;
+    timeSel.appendChild(opt); return;
+  }
+
+  const dur = Number(document.getElementById("service").value);
+  const day = new Date(date+"T00:00").getDay();
+
+  let startMin, endLimit;
+  if(day===6){ startMin=540; endLimit=780; }      // Sat
+  else { startMin=600; endLimit=1020; }           // Weekday
+
+  for(let m=startMin; m+dur<=endLimit; m+=30){
+    if(day!==6 && m<780 && m+dur>720) continue;   // lunch
+    const clash = data.busy.some(b=>m<b.end && m+dur>b.start);
+    const label=toStr(m);
+    const opt=new Option(label,label);
+    if(clash) opt.disabled=true;
+    timeSel.appendChild(opt);
+  }
+}
 
 async function book(){
-  const res = await fetch(URL,{
-    method:"POST",
-    body:JSON.stringify({
-      name:name.value,
-      phone:phone.value,
-      vehicle:vehicle.value,
-      service:service.value,
-      date:date.value,
-      time:time.value
-    })
-  });
+  const payload={
+    name:name.value, phone:phone.value, email:email.value,
+    vehicle:vehicle.value,
+    service:service.options[service.selectedIndex].text,
+    date:date.value, time:time.value
+  };
+  const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(payload)});
+  const t=await r.text();
+  if(t==="OK") alert("예약 완료");
+  else alert("예약 불가");
+}
 
-  const t = await res.text();
-  if(t==="DUPLICATE") alert("이미 예약된 시간입니다");
-  else if(t==="LUNCH") alert("점심시간입니다");
-  else alert("예약 완료!");
+function toStr(m){
+  let h=Math.floor(m/60),min=m%60,ap=h>=12?"PM":"AM";
+  if(h>12) h-=12;
+  return `${h}:${min===0?"00":"30"} ${ap}`;
 }
 </script>
 </body>
 </html>
-
