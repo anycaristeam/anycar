@@ -1,163 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Anycaristeam Booking</title>
-
 <style>
-body { font-family: Segoe UI, sans-serif; background:#f4f7f6; margin:0; padding:10px; }
-.container { max-width:450px; margin:20px auto; background:#fff; padding:25px; border-radius:12px; }
-h2 { text-align:center; color:#1a73e8; }
-.section { margin-bottom:15px; }
-label { font-weight:bold; font-size:14px; }
-input, select { width:100%; padding:12px; margin-top:5px; }
-button { width:100%; padding:15px; background:#1a73e8; color:#fff; border:none; font-size:16px; }
-.notice { background:#fff3cd; padding:10px; margin-bottom:15px; font-size:13px; }
+body{font-family:Arial;background:#f4f7f6}
+.box{max-width:420px;margin:30px auto;background:#fff;padding:20px;border-radius:10px}
+button{width:100%;padding:12px;background:#1a73e8;color:#fff;border:none}
 </style>
 </head>
-
 <body>
-<div class="container">
+
+<div class="box">
 <h2>Anycaristeam Booking</h2>
 
-<div class="notice">
-• Lunch: 12–1 PM<br>
-• Closed: Wed & Sun<br>
-• Premium 2hrs / Basic 30mins
-</div>
+<input id="name" placeholder="Name"><br><br>
+<input id="phone" placeholder="Phone"><br><br>
 
-<form id="bookingForm">
-<div class="section">
-<label>Name</label>
-<input id="custName" required>
-</div>
-
-<div class="section">
-<label>Phone</label>
-<input id="custPhone" required>
-</div>
-
-<div class="section">
-<label>Vehicle</label>
-<select id="vehicle" required>
-<option value="">Select</option>
+<select id="vehicle">
 <option>Sedan</option>
 <option>SUV 5 seats</option>
 <option>Van / SUV 7 seats</option>
-</select>
-</div>
+</select><br><br>
 
-<div class="section">
-<label>Service</label>
-<select id="serviceType" required>
-<option value="30">Basic (30 mins)</option>
-<option value="120">Premium Full Steam (2 hrs)</option>
-</select>
-</div>
+<select id="service">
+<option>Basic (30 mins)</option>
+<option>Premium Full Steam (2 hrs)</option>
+</select><br><br>
 
-<div class="section">
-<label>Date</label>
-<input type="date" id="bookingDate" required>
-</div>
+<input type="date" id="date"><br><br>
 
-<div class="section">
-<label>Time</label>
-<select id="bookingTime" required disabled>
-<option>Select date first</option>
-</select>
-</div>
+<select id="time">
+<option>10:00 AM</option>
+<option>10:30 AM</option>
+<option>11:00 AM</option>
+<option>11:30 AM</option>
+<option>1:00 PM</option>
+<option>1:30 PM</option>
+<option>2:00 PM</option>
+<option>2:30 PM</option>
+<option>3:00 PM</option>
+<option>3:30 PM</option>
+<option>4:00 PM</option>
+<option>4:30 PM</option>
+<option>5:00 PM</option>
+<option>5:30 PM</option>
+</select><br><br>
 
-<button type="submit">Complete Booking</button>
-</form>
+<button onclick="book()">Book</button>
 </div>
 
 <script>
-const scriptURL = "https://script.google.com/macros/s/AKfycbwBUohh0e8NJU6NRvMaNsREcGxpOu1uGfeiklKg1ivsdep-EbGaLMHD7jc6rDhlnvg8/exec";
+const URL = "https://script.google.com/macros/s/AKfycbwZ_mjwf_cUQ5_ve1CZd7o2YeL1FIZcyyZe62E5ADxm0aTaLcbEDXChY1-IfCuTBQC2/exec";
 
-const bookingDate = document.getElementById("bookingDate");
-const bookingTime = document.getElementById("bookingTime");
-const serviceType = document.getElementById("serviceType");
-
-bookingDate.onchange = loadTimes;
-serviceType.onchange = loadTimes;
-
-function toMin(t){
-  let [time, ap] = t.split(" ");
-  let [h,m] = time.split(":").map(Number);
-  if(ap==="PM" && h!==12) h+=12;
-  if(ap==="AM" && h===12) h=0;
-  return h*60+m;
-}
-
-async function loadTimes(){
-  const date = bookingDate.value;
-  if(!date) return;
-
-  bookingTime.innerHTML="<option>Loading...</option>";
-  bookingTime.disabled=true;
-
-  const res = await fetch(`${scriptURL}?date=${date}`);
-  const booked = await res.json();
-
-  const busy = booked.map(b=>{
-    const [t,s]=b.split("|");
-    const start=toMin(t);
-    const dur=s.toLowerCase().includes("premium")?120:30;
-    return {start,end:start+dur};
+async function book(){
+  const res = await fetch(URL,{
+    method:"POST",
+    body:JSON.stringify({
+      name:name.value,
+      phone:phone.value,
+      vehicle:vehicle.value,
+      service:service.value,
+      date:date.value,
+      time:time.value
+    })
   });
 
-  bookingTime.innerHTML="";
-  const duration=Number(serviceType.value);
-  const lunchStart=720, lunchEnd=780;
-
-  for(let h=10;h<18;h++){
-    for(let m of [0,30]){
-      if(h===12) continue;
-
-      const start=h*60+m;
-      const end=start+duration;
-
-      const overlap=busy.some(b=>start<b.end && end>b.start);
-      const hitsLunch=start<lunchEnd && end>lunchStart;
-
-      const label=`${h%12||12}:${m===0?"00":"30"} ${h>=12?"PM":"AM"}`;
-      const opt=new Option(label,label);
-
-      if(overlap||hitsLunch||end>1080) opt.disabled=true;
-      bookingTime.add(opt);
-    }
-  }
-
-  bookingTime.insertBefore(new Option("Please select time",""),bookingTime.firstChild);
-  bookingTime.disabled=false;
+  const t = await res.text();
+  if(t==="DUPLICATE") alert("이미 예약된 시간입니다");
+  else if(t==="LUNCH") alert("점심시간입니다");
+  else alert("예약 완료!");
 }
-
-document.getElementById("bookingForm").onsubmit=async e=>{
-  e.preventDefault();
-
-  const payload={
-    name:custName.value,
-    phone:custPhone.value,
-    vehicle:vehicle.value,
-    service:serviceType.options[serviceType.selectedIndex].text,
-    date:bookingDate.value,
-    time:bookingTime.value
-  };
-
-  const res=await fetch(scriptURL,{method:"POST",body:JSON.stringify(payload)});
-  const txt=await res.text();
-
-  if(txt==="DUPLICATE"){
-    alert("This time is already booked.");
-    return;
-  }
-
-  alert("Reservation Successful!");
-  location.reload();
-};
 </script>
 </body>
 </html>
-
-
