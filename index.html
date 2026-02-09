@@ -7,27 +7,32 @@
 body{font-family:Arial;background:#f4f6f8}
 .box{max-width:420px;margin:30px auto;background:#fff;padding:20px;border-radius:10px}
 select,input,button{width:100%;padding:10px;margin:6px 0}
-button{background:#1a73e8;color:#fff;border:none}
+button{background:#1a73e8;color:#fff;border:none;cursor:pointer}
 </style>
 </head>
 <body>
+
 <div class="box">
 <h2>Anycaristeam Booking</h2>
 
+<!-- 서비스 (기본값 제거: 이게 핵심) -->
 <select id="service">
-  <option value="">Select service</option>
   <option value="Basic (30 mins)">Basic (30 mins)</option>
   <option value="Premium (2 hrs)">Premium (2 hrs)</option>
 </select>
 
+<!-- 날짜 -->
 <input type="date" id="date">
+
+<!-- 시간 -->
 <select id="time">
-  <option value="">Select time</option>
+  <option value="">Select date</option>
 </select>
 
 <input id="name" placeholder="Name">
 <input id="phone" placeholder="Phone">
 <input id="email" placeholder="Email">
+
 <select id="vehicle">
   <option>Sedan</option>
   <option>SUV 5 seats</option>
@@ -38,24 +43,25 @@ button{background:#1a73e8;color:#fff;border:none}
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzaLpgD3Yc3EiiBALLtrLFbe4UWjwj9O7-GJcRtKLXMwHw7SKM0Y2aiCL288SPh_zOX/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzOmsXUwpVwa0xwq1G7TTlcwXITtrdblmlZDwHLaKYA4hDTpfHbTYCKNUsesJtQ3QzO/exec";
 
 const serviceSel = document.getElementById("service");
 const dateSel = document.getElementById("date");
 const timeSel = document.getElementById("time");
 
-serviceSel.onchange = loadTimes;
-dateSel.onchange = loadTimes;
+serviceSel.addEventListener("change", loadTimes);
+dateSel.addEventListener("change", loadTimes);
 
-function minutes(h,m){return h*60+m;}
+function minutes(h,m){ return h*60+m; }
 
 async function loadTimes(){
   timeSel.innerHTML="";
+
   const date = dateSel.value;
   const service = serviceSel.value;
 
-  if(!date || !service){
-    timeSel.appendChild(new Option("Select date & service",""));
+  if(!date){
+    timeSel.appendChild(new Option("Select date",""));
     return;
   }
 
@@ -63,8 +69,8 @@ async function loadTimes(){
   const data = await res.json();
 
   if(data.closed){
-    const opt=new Option("Closed",""); 
-    opt.disabled=true;
+    const opt = new Option("Closed","");
+    opt.disabled = true;
     timeSel.appendChild(opt);
     return;
   }
@@ -77,60 +83,66 @@ async function loadTimes(){
   const day = new Date(date+"T00:00").getDay();
   let startMin, endLimit;
 
-  if(day===6){          // Saturday
-    startMin=540;       // 9:00
-    endLimit=780;       // 13:00
+  // 토요일
+  if(day === 6){
+    startMin = 540;   // 9:00
+    endLimit = 780;   // 13:00
   } else {
-    startMin=600;       // 10:00
-    endLimit=1020;      // 17:00
+    startMin = 600;   // 10:00
+    endLimit = 1020;  // 17:00
   }
 
   for(let m=startMin; m+duration<=endLimit; m+=30){
-    // 점심시간 12–1
-    if(day!==6 && m<780 && m+duration>720) continue;
 
-    const clash = busy.some(b => m < b.end && m+duration > b.start);
+    // 점심시간 (12–1)
+    if(day !== 6 && m < 780 && m+duration > 720) continue;
+
+    // 예약 겹침
+    const overlap = busy.some(b => m < b.end && m+duration > b.start);
 
     const label = toStr(m);
     const opt = new Option(label,label);
-    if(clash) opt.disabled=true;
+    if(overlap) opt.disabled = true;
 
     timeSel.appendChild(opt);
   }
 }
 
 async function book(){
-  if(!timeSel.value){
-    alert("시간을 선택하세요");
+  if(!dateSel.value || !timeSel.value){
+    alert("날짜와 시간을 선택하세요");
     return;
   }
 
-  const payload={
-    name:name.value,
-    phone:phone.value,
-    email:email.value,
-    vehicle:vehicle.value,
-    service:serviceSel.value,
-    date:dateSel.value,
-    time:timeSel.value
+  const payload = {
+    name: name.value,
+    phone: phone.value,
+    email: email.value,
+    vehicle: vehicle.value,
+    service: serviceSel.value,
+    date: dateSel.value,
+    time: timeSel.value
   };
 
-  const r=await fetch(API_URL,{
+  const r = await fetch(API_URL,{
     method:"POST",
-    body:JSON.stringify(payload)
+    body: JSON.stringify(payload)
   });
 
-  const t=await r.text();
-  if(t==="OK") alert("예약 완료");
+  const t = await r.text();
+  if(t === "OK") alert("예약 완료");
   else alert("예약 실패");
 }
 
 function toStr(m){
-  let h=Math.floor(m/60),min=m%60,ap=h>=12?"PM":"AM";
-  if(h===0) h=12;
-  else if(h>12) h-=12;
+  let h = Math.floor(m/60);
+  let min = m % 60;
+  let ap = h >= 12 ? "PM" : "AM";
+  if(h === 0) h = 12;
+  else if(h > 12) h -= 12;
   return `${h}:${min===0?"00":"30"} ${ap}`;
 }
 </script>
+
 </body>
 </html>
