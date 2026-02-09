@@ -80,10 +80,11 @@ button {
 <body>
 <div class="container">
   <h2>Anycaristeam Booking</h2>
+
   <div class="notice">
-    • Lunch (12–1 PM)<br>
-    • Wed, Sun: Closed<br>
-    • Premium (2 hrs) / Basic (30 mins)
+    • Lunch: 12:00 – 1:00 PM<br>
+    • Closed: Wednesday & Sunday<br>
+    • Premium: 2 hrs / Basic: 30 mins
   </div>
 
   <form id="bookingForm">
@@ -98,10 +99,20 @@ button {
     </div>
 
     <div class="section">
+      <label>Vehicle Type</label>
+      <select id="vehicle" required>
+        <option value="">Select vehicle type</option>
+        <option value="Sedan">Sedan</option>
+        <option value="SUV 5 seats">SUV 5 seats</option>
+        <option value="Van / SUV 7 seats">Van / SUV 7 seats</option>
+      </select>
+    </div>
+
+    <div class="section">
       <label>Service</label>
       <select id="serviceType" required>
-        <option value="120">Premium Full Steam (2 hrs)</option>
         <option value="30">Basic (30 mins)</option>
+        <option value="120">Premium Full Steam (2 hrs)</option>
       </select>
     </div>
 
@@ -129,10 +140,14 @@ button {
 
 <script>
 const scriptURL =
-'https://script.google.com/macros/s/AKfycbzPT9E7lYAWN25W4XNLsEu8QfAqVfm4Rg3HhjTf3iIidwmI1jIG4Qo0hFEFp_51iKem/exec';
+'https://script.google.com/macros/s/AKfycbyxe_UwFcJ3h_QDr--_drsKPV5yzAiwcBuMB1OymNWm7_P8lZYUj_AqoK234fys8gpR/exec';
 
-document.getElementById('bookingDate').addEventListener('change', fetchBookedTimes);
-document.getElementById('serviceType').addEventListener('change', fetchBookedTimes);
+const bookingDate = document.getElementById('bookingDate');
+const bookingTime = document.getElementById('bookingTime');
+const serviceType = document.getElementById('serviceType');
+
+bookingDate.addEventListener('change', loadTimes);
+serviceType.addEventListener('change', loadTimes);
 
 function toMinutes(timeStr) {
   let [time, ap] = timeStr.split(' ');
@@ -142,7 +157,7 @@ function toMinutes(timeStr) {
   return h * 60 + m;
 }
 
-async function fetchBookedTimes() {
+async function loadTimes() {
   const date = bookingDate.value;
   if (!date) return;
 
@@ -168,6 +183,7 @@ function generateSlots(date, bookedData) {
   }
 
   const duration = Number(serviceType.value);
+
   const busy = bookedData.map(b => {
     const [t, s] = b.split('|');
     const start = toMinutes(t);
@@ -178,25 +194,31 @@ function generateSlots(date, bookedData) {
   for (let h = 10; h < 18; h++) {
     for (let m of [0, 30]) {
 
-      if (h === 12) continue; // lunch
+      if (h === 12) continue; // lunch break
 
       const start = h * 60 + m;
       const end = start + duration;
 
       const overlap = busy.some(b => start < b.end && end > b.start);
-      const label = `${h % 12 || 12}:${m === 0 ? '00' : '30'} ${h >= 12 ? 'PM' : 'AM'}`;
+      const hitsLunch = start < 780 && end > 720;
+
+      const label =
+        `${h % 12 || 12}:${m === 0 ? '00' : '30'} ${h >= 12 ? 'PM' : 'AM'}`;
 
       const opt = new Option(label, label);
-      if (overlap) {
+
+      if (overlap || hitsLunch || end > 1080) {
         opt.disabled = true;
-        opt.text += ' (Full)';
       }
 
       bookingTime.add(opt);
     }
   }
 
-  bookingTime.insertBefore(new Option('Please select time', ''), bookingTime.firstChild);
+  bookingTime.insertBefore(
+    new Option('Please select time', ''),
+    bookingTime.firstChild
+  );
   bookingTime.selectedIndex = 0;
   bookingTime.disabled = false;
 }
@@ -207,15 +229,23 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
   const payload = {
     name: custName.value,
     phone: custPhone.value,
+    vehicle: vehicle.value,
     service: serviceType.options[serviceType.selectedIndex].text,
     date: bookingDate.value,
     time: bookingTime.value
   };
 
-  await fetch(scriptURL, {
+  const res = await fetch(scriptURL, {
     method: 'POST',
     body: JSON.stringify(payload)
   });
+
+  const text = await res.text();
+
+  if (text === 'DUPLICATE') {
+    alert('This time is already booked. Please choose another time.');
+    return;
+  }
 
   alert('Reservation Successful!');
   location.reload();
